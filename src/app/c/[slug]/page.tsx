@@ -23,6 +23,7 @@ import { CashFlowChart } from "@/components/CashFlowChart";
 import { WallOfShame } from "@/components/WallOfShame";
 import { StudentSearch } from "@/components/StudentSearch";
 import { ActivityFeed } from "@/components/ActivityFeed";
+import { SpecialCollectionsPanel } from "@/components/SpecialCollectionsPanel";
 
 export default function DashboardPage() {
   const params = useParams();
@@ -36,6 +37,7 @@ export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
   const [chartData, setChartData] = useState<any[]>([]);
   const [allClasses, setAllClasses] = useState<any[]>([]);
+  const [specialCollections, setSpecialCollections] = useState<any[]>([]);
 
   useEffect(() => {
     if (!slug) return;
@@ -80,6 +82,22 @@ export default function DashboardPage() {
           .eq("class_id", classData.id)
           .eq("type", "EXPENSE")
           .order("date", { ascending: false });
+
+        // Fetch special collections
+        const { data: collectionsData } = await supabase
+          .from("special_collections")
+          .select("*")
+          .eq("class_id", classData.id)
+          .order("created_at", { ascending: false });
+
+        // Fetch special collection payments
+        const collectionIds = (collectionsData || []).map((c: any) => c.id);
+        const { data: collectionPaymentsData } = collectionIds.length > 0
+          ? await supabase
+              .from("special_collection_payments")
+              .select("collection_id, student_id")
+              .in("collection_id", collectionIds)
+          : { data: [] };
 
         if (studentsError || expensesError) {
           console.error("Database fetch error:", studentsError, expensesError);
@@ -198,6 +216,23 @@ export default function DashboardPage() {
           weeksData[i].balance = runningBalance;
         }
 
+        // Map special collections with paid student IDs
+        const mappedCollections = (collectionsData || []).map((col: any) => {
+          const paidIds = (collectionPaymentsData || [])
+            .filter((p: any) => p.collection_id === col.id)
+            .map((p: any) => p.student_id);
+          return {
+            id: col.id,
+            name: col.name,
+            amount: col.amount,
+            description: col.description,
+            createdAt: col.created_at,
+            payments: paidIds.map((sid: string) => ({ studentId: sid })),
+            paidIds,
+          };
+        });
+
+        setSpecialCollections(mappedCollections);
         setClassInfo({
           id: classData.id,
           name: classData.name,
@@ -403,12 +438,27 @@ export default function DashboardPage() {
               students={stats.students}
               elapsedWeeks={stats.elapsedWeeks}
               weeklyAmount={classInfo.weeklyAmount}
+              allCollections={specialCollections}
             />
           </div>
           <div className="lg:col-span-1">
             <ActivityFeed students={students} expenses={expenses} />
           </div>
         </motion.section>
+
+        {/* ── Row 4: Iuran Khusus Panel ── */}
+        {specialCollections.length > 0 && (
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <SpecialCollectionsPanel
+              collections={specialCollections}
+              students={stats.students.map((s: any) => ({ id: s.id, name: s.name, nis: s.nis }))}
+            />
+          </motion.section>
+        )}
       </main>
 
       {/* Footer */}

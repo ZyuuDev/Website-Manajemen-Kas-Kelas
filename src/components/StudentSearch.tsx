@@ -9,6 +9,7 @@ import {
   DollarSign,
   UserCheck,
   X,
+  ClipboardList,
 } from "lucide-react";
 import { formatRupiah } from "@/lib/mock-data";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,16 +31,26 @@ interface StudentStats {
   payments: PaymentRecord[];
 }
 
+interface SpecialCollectionStatus {
+  id: string;
+  name: string;
+  amount: number;
+  hasPaid: boolean;
+}
+
 interface StudentSearchProps {
   students: StudentStats[];
   elapsedWeeks: number;
   weeklyAmount: number;
+  specialCollections?: SpecialCollectionStatus[][];  // per-student array
+  allCollections?: { id: string; name: string; amount: number; paidIds: string[] }[];
 }
 
 export function StudentSearch({
   students,
   elapsedWeeks,
   weeklyAmount,
+  allCollections = [],
 }: StudentSearchProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<StudentStats | null>(null);
@@ -333,6 +344,60 @@ export function StudentSearch({
                 )}
               </div>
             </div>
+
+            {/* Special Collections Status */}
+            {allCollections.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <ClipboardList className="h-4 w-4 text-violet-400" />
+                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                    Status Iuran Khusus
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="border-b border-border bg-slate-950/40">
+                        <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nama Iuran</th>
+                        <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nominal</th>
+                        <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allCollections.map((col, i) => {
+                        const hasPaid = selectedStudent
+                          ? col.paidIds.includes(selectedStudent.id)
+                          : false;
+                        return (
+                          <tr
+                            key={col.id}
+                            className={`border-b border-border hover:bg-white/[0.01] transition-colors ${
+                              i === allCollections.length - 1 ? "border-b-0" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-2.5 text-slate-300 font-semibold">{col.name}</td>
+                            <td className="px-4 py-2.5 text-right font-mono text-muted-foreground">{formatRupiah(col.amount)}</td>
+                            <td className="px-4 py-2.5 text-right">
+                              {hasPaid ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
+                                  <CheckCircle2 className="h-2.5 w-2.5" />
+                                  LUNAS
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-400">
+                                  <AlertCircle className="h-2.5 w-2.5" />
+                                  BELUM
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* Clear button */}
             <button
