@@ -1,274 +1,97 @@
-# Website Manajemen Kas Kelas
+# SakuKelas Portal (Website Transparansi Siswa)
 
-Website Manajemen Kas Kelas adalah aplikasi web berbasis **Next.js** yang dirancang untuk membantu pengelolaan kas kelas secara lebih rapi, transparan, dan mudah digunakan. Proyek ini cocok untuk kebutuhan kelas, organisasi kecil, komunitas, atau kegiatan yang membutuhkan pencatatan pemasukan dan pengeluaran secara sederhana namun terstruktur.
+SakuKelas Portal adalah platform web berbasis **Next.js** yang dirancang sebagai dashboard transparansi keuangan kelas untuk siswa. Portal ini bersifat **Read-Only** (Hanya Lihat), sehingga siswa dapat memantau uang kas kelas secara real-time tanpa perlu melakukan login akun, cukup dengan memasukkan kode kelas mereka.
 
-## Tentang Proyek
+---
 
-Aplikasi ini dibuat untuk mempermudah proses administrasi kas kelas, seperti:
+## 🚀 Fitur Utama
 
-- mencatat pemasukan kas
-- mencatat pengeluaran kas
-- melihat riwayat transaksi
-- memantau saldo kas secara real-time
-- mengurangi kesalahan pencatatan manual
-- membuat pengelolaan keuangan kelas lebih transparan
+- **Dashboard Transparansi Kas:**
+  - *Live Balance:* Tampilan saldo kas kelas saat ini secara mencolok di halaman utama.
+  - *Grafik Arus Kas (Recharts):* Visualisasi interaktif perbandingan uang kas masuk vs uang keluar bulanan.
+  - *Aktivitas Terbaru:* Riwayat transaksi terbaru dalam urutan waktu (timeline).
+- **Self-Check Status Iuran:**
+  - Memungkinkan siswa melakukan pencarian nama mereka untuk melihat status iuran kelas.
+  - Menampilkan kartu status pribadi (Lunas / Jumlah Tunggakan) beserta detail riwayat tanggal pembayarannya.
+- **Galeri Pengeluaran & Bukti Nota:**
+  - Menampilkan riwayat transaksi pengeluaran secara lengkap.
+  - Setiap pengeluaran yang diunggah oleh Bendahara melalui aplikasi mobile dapat dilihat bukti fisiknya (foto nota/struk) dalam bentuk popup gambar interaktif.
+- **Wall of Shame (Daftar Tunggakan Terbesar):**
+  - Menampilkan daftar nama siswa dengan nominal tunggakan terbesar secara transparan sebagai pengingat sosial halus agar segera melunasi iuran.
+- **Desain Modern "Emerald Finance":**
+  - Tampilan profesional default Dark Mode dengan kombinasi warna Emerald/Teal untuk status lunas dan Rose untuk tunggakan.
+  - Animasi transisi yang halus menggunakan Framer Motion.
 
-Dengan tampilan web, data kas dapat diakses lebih mudah melalui browser tanpa perlu aplikasi tambahan.
+---
 
-## Fitur Utama
+## 🛠️ Teknologi yang Digunakan
 
-Berikut fitur yang umumnya tersedia atau menjadi tujuan utama proyek ini:
+- **Framework:** [Next.js](https://nextjs.org/) (App Router, React 19)
+- **Language:** TypeScript
+- **Styling & UI Components:** [Tailwind CSS v4](https://tailwindcss.com/) & [shadcn/ui](https://ui.shadcn.com/)
+- **Database Client:** [Supabase Client](https://supabase.com/docs/reference/javascript/introduction) (`@supabase/supabase-js`)
+- **Charting:** [Recharts](https://recharts.org/) untuk diagram visualisasi kas.
+- **Animations:** [Framer Motion](https://www.framer.com/motion/) untuk micro-animations.
+- **Icons:** [Lucide React](https://lucide.dev/) untuk koleksi ikon modern.
 
-- **Dashboard kas** untuk melihat ringkasan saldo dan aktivitas keuangan
-- **Tambah pemasukan** untuk mencatat uang masuk
-- **Tambah pengeluaran** untuk mencatat uang keluar
-- **Riwayat transaksi** yang tersusun rapi
-- **Tampilan responsif** agar nyaman dibuka di desktop maupun mobile
-- **Antarmuka sederhana** sehingga mudah dipahami oleh pengguna non-teknis
-- **Struktur proyek modern** menggunakan ekosistem Next.js
+---
 
-Jika proyek ini terus dikembangkan, fitur tambahan yang bisa ditambahkan antara lain:
+## 📁 Struktur Proyek
 
-- export data ke Excel / PDF
-- filter transaksi berdasarkan tanggal
-- laporan bulanan otomatis
-- autentikasi admin/pengguna
-- manajemen anggota kelas
-- notifikasi saldo atau pengingat iuran
+Berikut adalah struktur folder utama dalam direktori `website/`:
 
-## Teknologi yang Digunakan
-
-Berdasarkan komposisi repository, proyek ini dibangun dengan teknologi berikut:
-
-- **TypeScript** — 96.3%
-- **CSS** — 3.2%
-- **JavaScript** — 0.5%
-
-Dan secara struktur, project ini adalah aplikasi **Next.js**.
-
-## Struktur Proyek
-
-Secara umum, project Next.js seperti ini biasanya memiliki struktur berikut:
-
-- `app/` — halaman dan komponen utama aplikasi
-- `public/` — file statis seperti gambar dan ikon
-- `components/` — komponen UI reusable
-- `styles/` — file styling
-- `package.json` — konfigurasi dependency dan script
-- `tsconfig.json` — konfigurasi TypeScript
-
-> Catatan: struktur asli bisa sedikit berbeda tergantung implementasi di repository.
-
-## Cara Install dari Nol
-
-Ikuti langkah-langkah berikut jika Anda ingin menjalankan proyek ini di komputer baru.
-
-### 1. Clone repository
-
-```bash
-git clone https://github.com/ZyuuDev/Website-Manajemen-Kas-Kelas.git
-cd Website-Manajemen-Kas-Kelas
+```text
+src/
+├── app/          # App Router Next.js (layout, page utama, & halaman dinamis c/[slug])
+├── components/   # Komponen UI reusable (Card, Table, Dialog, Sheet, dsb.)
+└── lib/          # Inisialisasi Supabase client & konfigurasi database
+public/           # Aset statis seperti gambar dan logo
+.env.local        # File konfigurasi lokal untuk Supabase URL & Anon Key
+components.json   # Konfigurasi shadcn/ui
 ```
 
-### 2. Install dependency
-
-Gunakan salah satu package manager berikut sesuai yang Anda pakai.
-
-#### Dengan npm
-```bash
-npm install
-```
-
-#### Dengan yarn
-```bash
-yarn install
-```
-
-#### Dengan pnpm
-```bash
-pnpm install
-```
-
-#### Dengan bun
-```bash
-bun install
-```
-
-### 3. Jalankan development server
-
-```bash
-npm run dev
-```
-
-Setelah itu buka browser dan akses:
-
-```bash
-http://localhost:3000
-```
-
-## Cara Setup Sampai Ready
-
-Berikut alur setup yang lebih lengkap agar project siap dipakai:
-
-### A. Pastikan environment sudah siap
-
-Sebelum menjalankan project, pastikan perangkat Anda sudah terpasang:
-
-- **Node.js** versi yang kompatibel
-- **Git**
-- package manager yang dipilih: npm / yarn / pnpm / bun
-
-Cek versi Node.js:
-
-```bash
-node -v
-```
-
-Cek versi npm:
-
-```bash
-npm -v
-```
-
-### B. Install dependency
-
-Masuk ke folder project lalu install semua kebutuhan aplikasi:
-
-```bash
-npm install
-```
-
-### C. Jalankan project
-
-```bash
-npm run dev
-```
-
-### D. Buka di browser
-
-Akses:
-
-```bash
-http://localhost:3000
-```
-
-Jika halaman berhasil terbuka, berarti setup sudah berhasil.
-
-### E. Mulai mengedit
-
-Pada project Next.js, halaman utama biasanya bisa dimodifikasi di:
-
-```bash
-app/page.tsx
-```
-
-Setiap perubahan akan langsung terdeteksi dan aplikasi akan reload otomatis.
-
-## Script yang Umum Digunakan
-
-Berikut script yang biasanya tersedia pada project Next.js:
-
-```bash
-npm run dev     # menjalankan development server
-npm run build   # membuat build production
-npm run start   # menjalankan hasil build production
-npm run lint    # menjalankan pengecekan kode
-```
-
-> Jika ada script tambahan di `package.json`, Anda bisa menambahkan dokumentasinya di sini.
-
-## Build untuk Production
-
-Jika proyek sudah siap dirilis, jalankan build production:
-
-```bash
-npm run build
-```
-
-Setelah build selesai, jalankan versi production:
-
-```bash
-npm run start
-```
-
-## Deploy
-
-Project Next.js seperti ini sangat mudah dideploy, terutama ke:
-
-- **Vercel**
-- **Netlify**
-- **Railway**
-- **Render**
-- server VPS / hosting sendiri
-
-### Deploy ke Vercel
-
-Langkah umum deploy ke Vercel:
-
-1. Push repository ke GitHub
-2. Login ke [Vercel](https://vercel.com)
-3. Klik **New Project**
-4. Import repository `Website-Manajemen-Kas-Kelas`
-5. Vercel akan mendeteksi Next.js secara otomatis
-6. Klik deploy
-
-## Tips Pengembangan
-
-Beberapa tips agar proyek lebih rapi dan mudah dikembangkan:
-
-- gunakan komponen reusable
-- pisahkan logika dan tampilan
-- simpan data transaksi dengan struktur yang konsisten
-- tambahkan validasi input untuk mencegah data salah
-- buat UI yang sederhana agar mudah digunakan oleh pengguna kelas
-
-## Ide Pengembangan Lanjutan
-
-Kalau ingin proyek ini lebih lengkap, Anda bisa menambahkan:
-
-- sistem login admin
-- database permanen
-- dashboard statistik
-- grafik pemasukan dan pengeluaran
-- pencarian transaksi
-- export laporan
-- mode dark/light
-- notifikasi otomatis untuk iuran
-- halaman profil kelas
-
-## Troubleshooting
-
-### 1. Port 3000 sedang dipakai
-
-Jika `localhost:3000` tidak bisa dibuka, coba jalankan ulang server. Next.js biasanya akan meminta port lain jika 3000 digunakan aplikasi lain.
-
-### 2. Dependency error
-
-Jika terjadi error saat install, coba:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-### 3. Build gagal
-
-Cek kembali apakah ada error pada TypeScript, import file, atau konfigurasi komponen.
-
-## Kontribusi
-
-Kalau Anda ingin mengembangkan proyek ini lebih lanjut, silakan:
-
-1. fork repository
-2. buat branch baru
-3. lakukan perubahan
-4. test hasilnya
-5. kirim pull request
-
-## Lisensi
-
-Silakan sesuaikan bagian ini dengan lisensi yang Anda gunakan. Jika belum ada lisensi resmi, Anda bisa menambahkannya nanti.
-
-## Penutup
-
-Website Manajemen Kas Kelas dibuat agar pengelolaan keuangan kelas menjadi lebih mudah, jelas, dan modern. Dengan dokumentasi ini, proyek diharapkan lebih gampang dipahami, dijalankan, dan dikembangkan oleh siapa pun yang terlibat.
+---
+
+## 📥 Panduan Instalasi dan Menjalankan Proyek
+
+Website ini merupakan bagian dari monorepo **SakuKelas** dan terletak di folder `/website`.
+
+### Prasyarat:
+Pastikan Anda sudah menginstal:
+- [Node.js](https://nodejs.org/) (versi 18.x atau terbaru)
+- npm, yarn, pnpm, atau bun
+
+### Langkah-Langkah Run:
+
+1. **Clone Repository Utama & Masuk ke Folder Website:**
+   ```bash
+   git clone https://github.com/ZyuuDev/webkassekolah.git
+   cd webkassekolah/website
+   ```
+
+2. **Install Dependensi:**
+   ```bash
+   npm install
+   ```
+
+3. **Konfigurasi Environment Variable:**
+   Buat file `.env.local` di folder `website/` (jika belum ada) dan isi dengan kredensial Supabase Anda:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+4. **Jalankan Development Server:**
+   ```bash
+   npm run dev
+   ```
+
+5. **Buka di Browser:**
+   Buka [http://localhost:3000](http://localhost:3000) pada browser Anda.
+
+---
+
+## 🔐 Keamanan & Row Level Security (RLS)
+Untuk keamanan data, tabel Supabase dikonfigurasi menggunakan **Row Level Security (RLS)** yang membatasi hak akses dari sisi client website:
+- Akses website dibatasi secara ketat hanya untuk operasi **`SELECT` (Read-Only)** berdasarkan *slug* kelas.
+- Operasi manipulasi data (`INSERT`, `UPDATE`, `DELETE`) diblokir sepenuhnya di sisi website dan hanya diizinkan melalui autentikasi Bendahara di aplikasi mobile.
