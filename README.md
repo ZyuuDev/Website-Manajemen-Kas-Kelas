@@ -58,7 +58,7 @@ Website ini merupakan bagian dari monorepo **SakuKelas** dan terletak di folder 
 
 ### Prasyarat:
 Pastikan Anda sudah menginstal:
-- [Node.js](https://nodejs.org/) (versi 18.x atau terbaru)
+- [Node.js](https://nodejs.org/) (versi 18.x atau versi yang terbaru)
 - npm, yarn, pnpm, atau bun
 
 ### Langkah-Langkah Run:
