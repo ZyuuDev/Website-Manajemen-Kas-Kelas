@@ -1,8 +1,8 @@
 "use client";
 
 import { Wallet, TrendingUp, TrendingDown, AlertCircle } from "lucide-react";
-import { formatRupiah } from "@/lib/mock-data";
 import { motion } from "framer-motion";
+import { formatRupiah } from "@/lib/utils";
 
 interface BalanceCardProps {
   liveBalance: number;
@@ -11,33 +11,33 @@ interface BalanceCardProps {
   totalDebt: number;
 }
 
-const stat = [
+const tiles = [
   {
     key: "income" as const,
-    label: "Total Pemasukan",
+    label: "Pemasukan",
     sublabel: "Iuran terkumpul semester ini",
     icon: TrendingUp,
-    colorClass: "text-emerald-400",
-    bgClass: "bg-emerald-500/10",
-    borderClass: "border-emerald-500/10",
+    text: "text-chart-income",
+    chip: "bg-chart-income/12 text-chart-income",
+    bar: "bg-chart-income",
   },
   {
     key: "expense" as const,
-    label: "Total Pengeluaran",
+    label: "Pengeluaran",
     sublabel: "Untuk keperluan kelas",
     icon: TrendingDown,
-    colorClass: "text-rose-400",
-    bgClass: "bg-rose-500/10",
-    borderClass: "border-rose-500/10",
+    text: "text-chart-expense",
+    chip: "bg-chart-expense/12 text-chart-expense",
+    bar: "bg-chart-expense",
   },
   {
     key: "debt" as const,
-    label: "Total Tunggakan",
+    label: "Tunggakan",
     sublabel: "Tagihan belum terbayar",
     icon: AlertCircle,
-    colorClass: "text-amber-400",
-    bgClass: "bg-amber-500/10",
-    borderClass: "border-amber-500/10",
+    text: "text-destructive",
+    chip: "bg-danger-soft text-destructive",
+    bar: "bg-destructive",
   },
 ];
 
@@ -51,63 +51,58 @@ export function BalanceCard({
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {/* Main Balance Card */}
+      {/* Kartu saldo utama */}
       <motion.div
         whileHover={{ y: -3 }}
         transition={{ duration: 0.2 }}
         className="sm:col-span-2 xl:col-span-1"
       >
-        <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-emerald-950/40 via-card to-card p-6 shadow-xl shadow-black/20 h-full">
-          {/* Glow decoration */}
-          <div className="absolute -top-6 -right-6 h-28 w-28 rounded-full bg-primary/15 blur-2xl" />
-          <div className="absolute bottom-0 left-0 h-20 w-40 rounded-full bg-teal-500/10 blur-2xl" />
+        <div className="relative h-full overflow-hidden rounded-3xl bg-linear-to-br from-violet-600 via-violet-500 to-fuchsia-500 p-6 shadow-xl shadow-violet-500/25">
+          {/* Dekorasi lingkaran */}
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+          <div className="absolute -bottom-10 -left-6 h-28 w-28 rounded-full bg-white/10" />
 
-          <div className="relative z-10">
+          <div className="relative z-10 text-white">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                Saldo Kas Kelas
+              <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest">
+                Saldo Kas
               </span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                <Wallet className="h-4.5 w-4.5" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15">
+                <Wallet className="h-5 w-5" />
               </div>
             </div>
-            <div className="mt-4">
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Saldo Saat Ini (Live)</div>
-              <p className="bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
-                {formatRupiah(liveBalance)}
-              </p>
-            </div>
-            <p className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              Diperbarui real-time dari aplikasi bendahara
+            <p className="mt-5 break-words text-3xl font-extrabold tracking-tight sm:text-4xl">
+              {formatRupiah(liveBalance)}
+            </p>
+            <p className="mt-3 flex items-center gap-1.5 text-[11px] font-semibold text-white/85">
+              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+              Live · langsung dari catatan bendahara
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* Stat cards */}
-      {stat.map((s) => {
-        const Icon = s.icon;
-        const value = values[s.key];
+      {/* Tiga tile metrik */}
+      {tiles.map((t) => {
+        const Icon = t.icon;
         return (
-          <motion.div
-            key={s.key}
-            whileHover={{ y: -3 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div className="relative overflow-hidden rounded-2xl border border-border bg-card p-6 shadow-lg shadow-black/10 h-full backdrop-blur-sm">
+          <motion.div key={t.key} whileHover={{ y: -3 }} transition={{ duration: 0.2 }}>
+            <div className="relative h-full overflow-hidden rounded-3xl border-2 border-border bg-card p-6">
+              <span className={`absolute inset-x-0 top-0 h-1.5 ${t.bar}`} />
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  {s.label}
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground">
+                  {t.label}
                 </span>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${s.bgClass} ${s.colorClass}`}>
-                  <Icon className="h-4.5 w-4.5" />
+                <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${t.chip}`}>
+                  <Icon className="h-5 w-5" />
                 </div>
               </div>
-              <p className={`mt-4 text-2xl font-extrabold tracking-tight ${s.colorClass} sm:text-3xl`}>
-                {formatRupiah(value)}
+              <p className={`mt-4 break-words text-2xl font-extrabold tracking-tight sm:text-[26px] ${t.text}`}>
+                {formatRupiah(values[t.key])}
               </p>
-              <p className="mt-2 text-[10px] text-muted-foreground/60">{s.sublabel}</p>
+              <p className="mt-2 text-[11px] font-medium text-muted-foreground">
+                {t.sublabel}
+              </p>
             </div>
           </motion.div>
         );

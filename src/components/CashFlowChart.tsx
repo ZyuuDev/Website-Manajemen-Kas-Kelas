@@ -1,8 +1,9 @@
 "use client";
 
 import {
-  AreaChart,
-  Area,
+  ComposedChart,
+  Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -10,130 +11,151 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { formatRupiah } from "@/lib/mock-data";
-import { TrendingUp } from "lucide-react";
-
-interface CashFlowData {
-  name: string;
-  income: number;
-  expense: number;
-  balance: number;
-}
+import { BarChart3 } from "lucide-react";
+import { formatRupiah } from "@/lib/utils";
+import type { CashFlowWeek } from "@/lib/types";
 
 interface CashFlowChartProps {
-  data: CashFlowData[];
+  data: CashFlowWeek[];
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="rounded-xl border border-slate-700/80 bg-slate-900/95 p-4 shadow-2xl backdrop-blur-xl text-xs min-w-[180px]">
-        <p className="mb-3 font-bold text-slate-200 border-b border-slate-800 pb-2">{label}</p>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 text-emerald-400">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
-              Masuk
-            </span>
-            <span className="font-mono font-bold text-emerald-400">
-              {formatRupiah(payload[0]?.value ?? 0)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-4">
-            <span className="flex items-center gap-1.5 text-rose-400">
-              <span className="inline-block h-2 w-2 rounded-full bg-rose-400" />
-              Keluar
-            </span>
-            <span className="font-mono font-bold text-rose-400">
-              {formatRupiah(payload[1]?.value ?? 0)}
-            </span>
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-slate-800 pt-2 mt-1">
-            <span className="flex items-center gap-1.5 text-teal-400">
-              <span className="inline-block h-2 w-2 rounded-full bg-teal-400" />
-              Saldo
-            </span>
-            <span className="font-mono font-bold text-teal-300">
-              {formatRupiah(payload[2]?.value ?? 0)}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
+const seriesMeta: Record<string, { label: string; colorVar: string }> = {
+  income: { label: "Masuk", colorVar: "var(--chart-income)" },
+  expense: { label: "Keluar", colorVar: "var(--chart-expense)" },
+  balance: { label: "Saldo", colorVar: "var(--chart-balance)" },
 };
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+function ChartTooltip({ active, payload, label }: any) {
+  if (!active || !payload || payload.length === 0) return null;
+  return (
+    <div className="min-w-[180px] rounded-2xl border-2 border-border bg-popover p-3.5 text-xs shadow-xl">
+      <p className="mb-2.5 border-b-2 border-border pb-2 font-extrabold text-popover-foreground">
+        {label}
+      </p>
+      <div className="space-y-1.5">
+        {payload.map((entry: any) => {
+          const meta = seriesMeta[entry.dataKey];
+          if (!meta) return null;
+          return (
+            <div key={entry.dataKey} className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-1.5 font-semibold text-muted-foreground">
+                <span
+                  className="inline-block h-2.5 w-2.5 rounded-full"
+                  style={{ backgroundColor: meta.colorVar }}
+                />
+                {meta.label}
+              </span>
+              <span className="font-mono font-bold text-popover-foreground">
+                {formatRupiah(entry.value ?? 0)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const legendOrder = ["income", "expense", "balance"];
+
+function LegendContent({ payload }: any) {
+  if (!payload) return null;
+  const sorted = [...payload].sort(
+    (a: any, b: any) =>
+      legendOrder.indexOf(a.dataKey ?? a.value) - legendOrder.indexOf(b.dataKey ?? b.value)
+  );
+  return (
+    <div className="mt-1 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+      {sorted.map((entry: any) => {
+        const meta = seriesMeta[entry.dataKey ?? entry.value];
+        return (
+          <span
+            key={entry.value}
+            className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground"
+          >
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: entry.color }}
+            />
+            {meta?.label ?? entry.value}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// Sumbu Y disingkat: 1.500.000 → 1,5jt · 50.000 → 50rb
+function shortRupiah(value: number): string {
+  if (Math.abs(value) >= 1_000_000)
+    return `${(value / 1_000_000).toLocaleString("id-ID", { maximumFractionDigits: 1 })}jt`;
+  if (Math.abs(value) >= 1_000)
+    return `${Math.round(value / 1_000)}rb`;
+  return `${value}`;
+}
 
 export function CashFlowChart({ data }: CashFlowChartProps) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-xl backdrop-blur-sm h-full">
+    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6">
       {/* Header */}
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <h3 className="text-sm font-bold text-slate-100">Grafik Aliran Kas Kelas</h3>
-          </div>
-          <p className="mt-1.5 text-xs text-muted-foreground pl-10">
-            Perbandingan mingguan uang masuk vs keluar
-          </p>
+      <div className="mb-4 flex items-start gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+          <BarChart3 className="h-5 w-5" />
         </div>
-        {/* Legend chips */}
-        <div className="hidden sm:flex flex-col gap-1.5 shrink-0 text-[10px] text-slate-500">
-          <span className="flex items-center gap-1.5">
-            <span className="h-1.5 w-3 rounded-full bg-emerald-400" />Masuk
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-1.5 w-3 rounded-full bg-rose-400" />Keluar
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-1.5 w-3 rounded-full bg-teal-400" />Saldo
-          </span>
+        <div>
+          <h3 className="text-sm font-extrabold">Arus Kas Mingguan</h3>
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+            Uang masuk vs keluar per minggu, plus garis saldo berjalan
+          </p>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="h-[260px] w-full sm:h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 4, left: -16, bottom: 0 }}>
-            <defs>
-              <linearGradient id="gIncome" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#10b981" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gExpense" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#f43f5e" stopOpacity={0.25} />
-                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="gBalance" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%"  stopColor="#2dd4bf" stopOpacity={0.15} />
-                <stop offset="95%" stopColor="#2dd4bf" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+      <div className="min-h-[260px] flex-1 sm:min-h-[300px]">
+        <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+          <ComposedChart data={data} barGap={2} margin={{ top: 8, right: 4, left: 4, bottom: 0 }}>
+            <CartesianGrid vertical={false} stroke="var(--border)" strokeWidth={1} />
             <XAxis
               dataKey="name"
-              stroke="#475569"
-              fontSize={10}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11, fontWeight: 600 }}
               tickLine={false}
-              axisLine={false}
+              axisLine={{ stroke: "var(--border)" }}
               interval="preserveStartEnd"
             />
             <YAxis
-              stroke="#475569"
-              fontSize={9}
+              tick={{ fill: "var(--muted-foreground)", fontSize: 11, fontWeight: 600 }}
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v) => `${v / 1000}k`}
-              width={40}
+              tickFormatter={shortRupiah}
+              width={44}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#334155", strokeWidth: 1, strokeDasharray: "4 4" }} />
-            <Area name="Uang Masuk"     type="monotone" dataKey="income"  stroke="#10b981" strokeWidth={2} fill="url(#gIncome)"  fillOpacity={1} dot={false} activeDot={{ r: 4, fill: "#10b981", strokeWidth: 0 }} />
-            <Area name="Uang Keluar"    type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={2} fill="url(#gExpense)" fillOpacity={1} dot={false} activeDot={{ r: 4, fill: "#f43f5e", strokeWidth: 0 }} />
-            <Area name="Saldo Kumulatif" type="monotone" dataKey="balance" stroke="#2dd4bf" strokeWidth={1.5} strokeDasharray="5 4" fill="url(#gBalance)" fillOpacity={1} dot={false} activeDot={{ r: 4, fill: "#2dd4bf", strokeWidth: 0 }} />
-          </AreaChart>
+            <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.5 }} />
+            <Legend content={<LegendContent />} />
+            <Bar
+              dataKey="income"
+              fill="var(--chart-income)"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={18}
+              isAnimationActive={false}
+            />
+            <Bar
+              dataKey="expense"
+              fill="var(--chart-expense)"
+              radius={[4, 4, 0, 0]}
+              maxBarSize={18}
+              isAnimationActive={false}
+            />
+            <Line
+              type="monotone"
+              dataKey="balance"
+              stroke="var(--chart-balance)"
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 2, stroke: "var(--card)" }}
+              isAnimationActive={false}
+            />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

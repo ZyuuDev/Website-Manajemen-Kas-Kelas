@@ -8,9 +8,13 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Portal Transparansi Kas Kelas",
+  title: "SakuKelas — Portal Transparansi Kas Kelas",
   description: "Pantau uang kas kelas secara real-time dan transparan.",
 };
+
+// Dijalankan sebelum halaman dirender agar tidak terjadi kedipan tema (FOUC).
+// Prioritas: ?theme=dark|light → pilihan tersimpan → preferensi perangkat.
+const themeInitScript = `(function(){try{var q=new URLSearchParams(location.search).get("theme");var t=q||localStorage.getItem("sakukelas-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var c=document.documentElement.classList;d?c.add("dark"):c.remove("dark");}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -19,10 +23,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${plusJakarta.variable} dark h-full antialiased`}
+      lang="id"
+      suppressHydrationWarning
+      className={`${plusJakarta.variable} h-full antialiased`}
     >
-      <body className="min-h-screen font-sans">{children}</body>
+      <body className="min-h-screen font-sans">
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        {children}
+      </body>
     </html>
   );
 }

@@ -5,45 +5,19 @@ import {
   Search,
   CheckCircle2,
   AlertCircle,
-  Calendar,
-  DollarSign,
-  UserCheck,
   X,
   ClipboardList,
+  History,
 } from "lucide-react";
-import { formatRupiah } from "@/lib/mock-data";
 import { motion, AnimatePresence } from "framer-motion";
-
-interface PaymentRecord {
-  id: string;
-  amount: number;
-  date: string;
-}
-
-interface StudentStats {
-  id: string;
-  name: string;
-  nis: string;
-  totalPaid: number;
-  debt: number;
-  debtWeeks: number;
-  isLunas: boolean;
-  payments: PaymentRecord[];
-}
-
-interface SpecialCollectionStatus {
-  id: string;
-  name: string;
-  amount: number;
-  hasPaid: boolean;
-}
+import { formatRupiah, formatDateLong } from "@/lib/utils";
+import type { StudentStats, SpecialCollectionInfo } from "@/lib/types";
 
 interface StudentSearchProps {
   students: StudentStats[];
   elapsedWeeks: number;
   weeklyAmount: number;
-  specialCollections?: SpecialCollectionStatus[][];  // per-student array
-  allCollections?: { id: string; name: string; amount: number; paidIds: string[] }[];
+  allCollections?: SpecialCollectionInfo[];
 }
 
 export function StudentSearch({
@@ -67,358 +41,243 @@ export function StudentSearch({
   };
 
   const expectedAmount = elapsedWeeks * weeklyAmount;
-
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-
   const progressPct = selectedStudent
     ? Math.min(100, (selectedStudent.totalPaid / Math.max(1, expectedAmount)) * 100)
     : 0;
 
+  const collectionStatus = selectedStudent
+    ? allCollections.map((col) => ({
+        id: col.id,
+        name: col.name,
+        amount: col.amount,
+        hasPaid: col.paidIds.includes(selectedStudent.id),
+      }))
+    : [];
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-xl backdrop-blur-sm">
+    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6">
       {/* Header */}
-      <div className="mb-5">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Search className="h-4 w-4" />
-          </div>
-          <h3 className="text-sm font-bold text-slate-100">Self-Check Status Kas</h3>
+      <div className="mb-4 flex items-start gap-2.5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
+          <Search className="h-5 w-5" />
         </div>
-        <p className="mt-1.5 text-xs text-muted-foreground pl-10">
-          Cari nama Anda untuk memeriksa status pembayaran &amp; riwayat transaksi
-        </p>
+        <div>
+          <h3 className="text-sm font-extrabold">Cek Status Kas Kamu</h3>
+          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+            Ketik namamu, lihat status lunas & riwayat bayar
+          </p>
+        </div>
       </div>
 
-      {/* Search Input */}
+      {/* Input pencarian */}
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-500">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
           <Search className="h-4 w-4" />
         </div>
         <input
           id="student-search-input"
           type="text"
-          placeholder="Ketik nama lengkap atau panggilan Anda..."
+          placeholder="Ketik nama kamu di sini…"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="h-11 w-full rounded-xl border border-border bg-[#050810] pl-10 pr-10 text-sm text-slate-100 placeholder:text-slate-600 outline-none transition-all focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+          className="h-12 w-full rounded-2xl border-2 border-border bg-background pl-10 pr-10 text-sm font-semibold outline-none transition-all placeholder:font-medium placeholder:text-muted-foreground/70 focus:border-primary focus:ring-4 focus:ring-primary/15"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery("")}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-600 hover:text-slate-400"
+            aria-label="Hapus pencarian"
+            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
         )}
 
-        {/* Dropdown */}
+        {/* Dropdown hasil */}
         <AnimatePresence>
           {filteredStudents.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.15 }}
-              className="absolute z-20 mt-2 w-full rounded-xl border border-border bg-[#050810] p-1.5 shadow-2xl max-h-56 overflow-y-auto"
+              className="absolute inset-x-0 top-full z-20 mt-2 max-h-56 overflow-y-auto rounded-2xl border-2 border-border bg-popover p-1.5 shadow-xl"
             >
-              <p className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Hasil ({filteredStudents.length})
-              </p>
-              {filteredStudents.map((student) => (
+              {filteredStudents.map((s) => (
                 <button
-                  key={student.id}
-                  onClick={() => handleSelect(student)}
-                  className="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                  key={s.id}
+                  onClick={() => handleSelect(s)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold transition-colors hover:bg-accent hover:text-accent-foreground"
                 >
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-200 truncate">
-                      {student.name}
-                    </p>
-                    <p className="text-[10px] font-mono text-muted-foreground/60">
-                      NIS: {student.nis}
-                    </p>
-                  </div>
-                  <span
-                    className={`ml-3 shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-bold ${
-                      student.isLunas
-                        ? "bg-primary/10 text-primary"
-                        : "bg-destructive/10 text-destructive"
-                    }`}
-                  >
-                    {student.isLunas ? "Lunas" : "Nunggak"}
-                  </span>
+                  <span className="truncate">{s.name}</span>
+                  {s.isLunas ? (
+                    <span className="shrink-0 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-extrabold text-success">
+                      Lunas
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-extrabold text-destructive">
+                      Nunggak
+                    </span>
+                  )}
                 </button>
               ))}
-            </motion.div>
-          )}
-          {searchQuery.trim() && filteredStudents.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="absolute z-20 mt-2 w-full rounded-xl border border-border bg-[#050810] px-4 py-5 text-center text-xs text-muted-foreground shadow-2xl"
-            >
-              Nama tidak ditemukan. Periksa ejaan Anda.
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Selected Student Detail */}
+      {/* Kartu status pribadi */}
       <AnimatePresence mode="wait">
         {selectedStudent ? (
           <motion.div
             key={selectedStudent.id}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.3 }}
-            className="mt-6 space-y-5"
+            transition={{ duration: 0.25 }}
+            className="mt-4 space-y-4"
           >
-            {/* Status + Stats 3-col grid */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {/* Status badge */}
-              <div
-                className={`flex flex-col items-center justify-center rounded-2xl border p-5 text-center ${
-                  selectedStudent.isLunas
-                    ? "border-primary/20 bg-primary/5"
-                    : "border-destructive/20 bg-destructive/5"
-                }`}
-              >
-                {selectedStudent.isLunas ? (
-                  <CheckCircle2 className="h-10 w-10 text-primary mb-2" />
-                ) : (
-                  <AlertCircle className="h-10 w-10 text-destructive mb-2 animate-pulse" />
-                )}
-                <p className="text-sm font-bold text-slate-100 leading-tight">
-                  {selectedStudent.name}
-                </p>
-                <p className="mt-0.5 text-[10px] font-mono text-muted-foreground/60">
-                  NIS: {selectedStudent.nis}
-                </p>
-                <span
-                  className={`mt-3 rounded-full px-3 py-1 text-[10px] font-bold ${
-                    selectedStudent.isLunas
-                      ? "bg-primary/20 text-primary"
-                      : "bg-destructive/20 text-destructive"
-                  }`}
-                >
-                  {selectedStudent.isLunas ? "✓ LUNAS" : "⚠ ADA TUNGGAKAN"}
-                </span>
-              </div>
-
-              {/* Finance summary */}
-              <div className="rounded-2xl border border-border bg-white/[0.01] p-5 space-y-3">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Ikhtisar Kas
-                </p>
-                {[
-                  {
-                    label: "Total Dibayar",
-                    value: formatRupiah(selectedStudent.totalPaid),
-                    cls: "text-primary",
-                  },
-                  {
-                    label: `Wajib (W${elapsedWeeks})`,
-                    value: formatRupiah(expectedAmount),
-                    cls: "text-slate-300",
-                  },
-                  {
-                    label: "Sisa Tunggakan",
-                    value: formatRupiah(selectedStudent.debt),
-                    cls: selectedStudent.debt > 0 ? "text-destructive" : "text-primary",
-                  },
-                ].map((row) => (
-                  <div key={row.label} className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">{row.label}</span>
-                    <span className={`font-mono font-bold ${row.cls}`}>{row.value}</span>
-                  </div>
-                ))}
-                {/* Progress bar */}
-                <div className="pt-2 border-t border-border">
-                  <div className="flex justify-between text-[10px] text-muted-foreground mb-1.5">
-                    <span>Progres Pelunasan</span>
-                    <span>{Math.round(progressPct)}%</span>
-                  </div>
-                  <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPct}%` }}
-                      transition={{ duration: 0.7, ease: "easeOut" }}
-                      className={`h-full rounded-full ${
-                        selectedStudent.isLunas ? "bg-primary" : "bg-destructive"
-                      }`}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Time stats */}
-              <div className="rounded-2xl border border-border bg-white/[0.01] p-5 space-y-4">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                  Info Periode
-                </p>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-white/[0.03]">
-                    <Calendar className="h-4 w-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground">Minggu Berjalan</p>
-                    <p className="text-sm font-bold text-slate-200">
-                      Minggu Ke-{elapsedWeeks}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border bg-white/[0.03]">
-                    <DollarSign className="h-4 w-4 text-amber-500" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted-foreground">Iuran / Minggu</p>
-                    <p className="text-sm font-bold text-slate-200">
-                      {formatRupiah(weeklyAmount)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Payment History Table */}
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <UserCheck className="h-4 w-4 text-primary" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                  Riwayat Pembayaran Kas
-                </p>
-              </div>
-              <div className="rounded-xl border border-border overflow-hidden">
-                {selectedStudent.payments.length === 0 ? (
-                  <div className="py-8 text-center text-xs text-muted-foreground">
-                    Belum ada riwayat pembayaran kas tercatat.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="border-b border-border bg-slate-950/40">
-                          <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            No. Transaksi
-                          </th>
-                          <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Tanggal
-                          </th>
-                          <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                            Nominal
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedStudent.payments.map((p, i) => (
-                          <tr
-                            key={p.id}
-                            className={`border-b border-border hover:bg-white/[0.01] transition-colors ${
-                              i === selectedStudent.payments.length - 1
-                                ? "border-b-0"
-                                : ""
-                            }`}
-                          >
-                            <td className="px-4 py-2.5 font-mono text-[10px] text-muted-foreground/60">
-                              #{p.id.slice(0, 8).toUpperCase()}
-                            </td>
-                            <td className="px-4 py-2.5 text-slate-300">
-                              {formatDate(p.date)}
-                            </td>
-                            <td className="px-4 py-2.5 text-right font-mono font-bold text-primary">
-                              {formatRupiah(p.amount)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Special Collections Status */}
-            {allCollections.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-3">
-                  <ClipboardList className="h-4 w-4 text-violet-400" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                    Status Iuran Khusus
-                  </p>
-                </div>
-                <div className="rounded-xl border border-border overflow-hidden">
-                  <table className="w-full text-xs">
-                    <thead>
-                      <tr className="border-b border-border bg-slate-950/40">
-                        <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nama Iuran</th>
-                        <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Nominal</th>
-                        <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {allCollections.map((col, i) => {
-                        const hasPaid = selectedStudent
-                          ? col.paidIds.includes(selectedStudent.id)
-                          : false;
-                        return (
-                          <tr
-                            key={col.id}
-                            className={`border-b border-border hover:bg-white/[0.01] transition-colors ${
-                              i === allCollections.length - 1 ? "border-b-0" : ""
-                            }`}
-                          >
-                            <td className="px-4 py-2.5 text-slate-300 font-semibold">{col.name}</td>
-                            <td className="px-4 py-2.5 text-right font-mono text-muted-foreground">{formatRupiah(col.amount)}</td>
-                            <td className="px-4 py-2.5 text-right">
-                              {hasPaid ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-400">
-                                  <CheckCircle2 className="h-2.5 w-2.5" />
-                                  LUNAS
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-400">
-                                  <AlertCircle className="h-2.5 w-2.5" />
-                                  BELUM
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Clear button */}
-            <button
-              onClick={() => setSelectedStudent(null)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-slate-400 transition-colors"
+            {/* Status utama */}
+            <div
+              className={`rounded-3xl border-2 p-5 ${
+                selectedStudent.isLunas
+                  ? "border-success/40 bg-success-soft"
+                  : "border-destructive/40 bg-danger-soft"
+              }`}
             >
-              <X className="h-3.5 w-3.5" />
-              Tutup detail siswa
-            </button>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-3">
+                  {selectedStudent.isLunas ? (
+                    <CheckCircle2 className="h-9 w-9 shrink-0 text-success" />
+                  ) : (
+                    <AlertCircle className="h-9 w-9 shrink-0 text-destructive" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-extrabold">
+                      {selectedStudent.name}
+                    </p>
+                    <p
+                      className={`text-xs font-extrabold ${
+                        selectedStudent.isLunas ? "text-success" : "text-destructive"
+                      }`}
+                    >
+                      {selectedStudent.isLunas
+                        ? "Lunas — mantap! ✨"
+                        : `Nunggak ${selectedStudent.debtWeeks} minggu (${formatRupiah(selectedStudent.debt)})`}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedStudent(null)}
+                  aria-label="Tutup kartu status"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-2 border-border bg-card text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {/* Progress */}
+              <div className="mt-4">
+                <div className="mb-1.5 flex items-center justify-between text-[10px] font-bold text-muted-foreground">
+                  <span>
+                    Terbayar {formatRupiah(selectedStudent.totalPaid)} dari{" "}
+                    {formatRupiah(expectedAmount)}
+                  </span>
+                  <span>{Math.round(progressPct)}%</span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-card">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${progressPct}%` }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                    className={`h-full rounded-full ${
+                      selectedStudent.isLunas ? "bg-success" : "bg-destructive"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              {/* Riwayat pembayaran */}
+              <div className="rounded-3xl border-2 border-border bg-background p-4">
+                <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                  <History className="h-3.5 w-3.5" /> Riwayat Bayar
+                </p>
+                {selectedStudent.payments.length === 0 ? (
+                  <p className="py-4 text-center text-xs font-medium text-muted-foreground">
+                    Belum ada pembayaran semester ini.
+                  </p>
+                ) : (
+                  <div className="scrollbar-none max-h-44 space-y-1.5 overflow-y-auto">
+                    {[...selectedStudent.payments]
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex items-center justify-between rounded-xl bg-card px-3 py-2 text-xs"
+                        >
+                          <span className="font-medium text-muted-foreground">
+                            {formatDateLong(p.date)}
+                          </span>
+                          <span className="font-extrabold text-success">
+                            +{formatRupiah(p.amount)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Status iuran khusus */}
+              <div className="rounded-3xl border-2 border-border bg-background p-4">
+                <p className="mb-2.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wide text-muted-foreground">
+                  <ClipboardList className="h-3.5 w-3.5" /> Iuran Khusus
+                </p>
+                {collectionStatus.length === 0 ? (
+                  <p className="py-4 text-center text-xs font-medium text-muted-foreground">
+                    Tidak ada iuran khusus saat ini.
+                  </p>
+                ) : (
+                  <div className="scrollbar-none max-h-44 space-y-1.5 overflow-y-auto">
+                    {collectionStatus.map((c) => (
+                      <div
+                        key={c.id}
+                        className="flex items-center justify-between gap-2 rounded-xl bg-card px-3 py-2 text-xs"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-bold">{c.name}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground">
+                            {formatRupiah(c.amount)}
+                          </p>
+                        </div>
+                        {c.hasPaid ? (
+                          <span className="shrink-0 rounded-full bg-success-soft px-2 py-0.5 text-[10px] font-extrabold text-success">
+                            Sudah
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-full bg-danger-soft px-2 py-0.5 text-[10px] font-extrabold text-destructive">
+                            Belum
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           </motion.div>
         ) : (
           <motion.div
-            key="empty"
+            key="placeholder"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="mt-6 flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white/[0.01] py-10 text-center"
+            className="mt-4 flex flex-1 flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-border py-10 text-center"
           >
-            <Search className="h-8 w-8 text-muted-foreground/40 mb-2" />
-            <p className="text-xs text-muted-foreground">
-              Cari nama Anda di atas untuk melihat status kas secara detail.
+            <span className="text-2xl">🔍</span>
+            <p className="text-xs font-bold text-muted-foreground">
+              Cari namamu untuk melihat status & riwayat
+            </p>
+            <p className="text-[10px] font-medium text-muted-foreground/70">
+              Tanpa login — cukup ketik nama
             </p>
           </motion.div>
         )}
