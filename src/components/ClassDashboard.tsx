@@ -18,6 +18,7 @@ import { supabase } from "@/lib/supabase";
 import {
   calculateWeeksElapsed,
   getAdjustedWeekIndex,
+  parseLocalDate,
 } from "@/lib/utils";
 import type {
   CashFlowWeek,
@@ -195,18 +196,24 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           : { data: [] };
 
         // ── Hitung minggu efektif (dikurangi minggu libur) ──
-        const offWeekDates = (offWeeksData || []).map((ow: any) => ow.start_date as string);
-        const rawWeeks = calculateWeeksElapsed(semesterStart);
+        const rawOffWeekDates = (offWeeksData || []).map((ow: any) => ow.start_date as string);
+        const offWeekDates = Array.from(
+          new Set(
+            rawOffWeekDates.map((ow) => {
+              const match = ow.match(/^(\d{4}-\d{2}-\d{2})/);
+              return match ? match[1] : ow;
+            })
+          )
+        );
 
-        const start = new Date(semesterStart);
-        start.setHours(0, 0, 0, 0);
+        const rawWeeks = calculateWeeksElapsed(semesterStart);
+        const start = parseLocalDate(semesterStart);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
         let offWeekCount = 0;
         for (const ow of offWeekDates) {
-          const owDate = new Date(ow);
-          owDate.setHours(0, 0, 0, 0);
+          const owDate = parseLocalDate(ow);
           if (owDate >= start && owDate <= today) offWeekCount++;
         }
         const elapsedWeeks = Math.max(0, rawWeeks - offWeekCount);

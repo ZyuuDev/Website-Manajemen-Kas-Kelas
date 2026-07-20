@@ -15,13 +15,26 @@ export function formatRupiah(value: number): string {
   }).format(value);
 }
 
+// Timezone-safe local date parser (mengabaikan UTC offset pergeseran jam 00:00-07:00 WIB)
+export function parseLocalDate(dateStr: string): Date {
+  if (!dateStr) return new Date();
+  const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day, 0, 0, 0, 0);
+  }
+  const d = new Date(dateStr);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 // Jumlah minggu MENTAH yang sudah berjalan sejak tanggal mulai semester
 // (minggu ke-1 dimulai tepat di tanggal mulai; belum dikurangi minggu libur)
 export function calculateWeeksElapsed(startDateStr: string): number {
-  const start = new Date(startDateStr);
+  const start = parseLocalDate(startDateStr);
   const today = new Date();
-
-  start.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
 
   if (today < start) return 0;
@@ -40,20 +53,27 @@ export function getAdjustedWeekIndex(
   startDateStr: string,
   offWeekDates: string[]
 ): number {
-  const start = new Date(startDateStr);
-  start.setHours(0, 0, 0, 0);
-  const date = new Date(dateStr);
-  date.setHours(0, 0, 0, 0);
+  const start = parseLocalDate(startDateStr);
+  const date = parseLocalDate(dateStr);
 
   const diffDays = Math.floor(
     (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
   );
   const rawIndex = Math.max(0, Math.floor(diffDays / 7));
 
+  // Deduplikasi tanggal libur agar jika ada data ganda di DB tidak dihitung 2x
+  const uniqueOffWeekDates = Array.from(
+    new Set(
+      offWeekDates.map((ow) => {
+        const match = ow.match(/^(\d{4}-\d{2}-\d{2})/);
+        return match ? match[1] : ow;
+      })
+    )
+  );
+
   let offBefore = 0;
-  for (const ow of offWeekDates) {
-    const owDate = new Date(ow);
-    owDate.setHours(0, 0, 0, 0);
+  for (const ow of uniqueOffWeekDates) {
+    const owDate = parseLocalDate(ow);
     const owDiff = Math.floor(
       (owDate.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
     );
@@ -66,7 +86,7 @@ export function getAdjustedWeekIndex(
 
 // Format tanggal pendek Indonesia, contoh: 15 Jul 2026
 export function formatDateShort(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("id-ID", {
+  return parseLocalDate(dateStr).toLocaleDateString("id-ID", {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -75,7 +95,7 @@ export function formatDateShort(dateStr: string): string {
 
 // Format tanggal panjang Indonesia, contoh: 15 Juli 2026
 export function formatDateLong(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("id-ID", {
+  return parseLocalDate(dateStr).toLocaleDateString("id-ID", {
     day: "numeric",
     month: "long",
     year: "numeric",
