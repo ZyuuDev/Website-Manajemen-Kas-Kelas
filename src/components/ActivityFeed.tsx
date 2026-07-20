@@ -7,6 +7,7 @@ import {
   ArrowDownLeft,
   ImageOff,
   X,
+  Camera,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatRupiah, formatDateShort } from "@/lib/utils";
@@ -69,11 +70,11 @@ export function ActivityFeed({ students, expenses, miscIncomes }: ActivityFeedPr
 
   return (
     <>
-      <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card">
+      <div className="flex h-full flex-col rounded-2xl border border-border bg-card shadow-xs">
         {/* Header */}
         <div className="flex items-start gap-2.5 p-5 pb-3 sm:p-6 sm:pb-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-            <Receipt className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+            <Receipt className="h-4.5 w-4.5" />
           </div>
           <div>
             <h3 className="text-sm font-extrabold">Aktivitas Terakhir</h3>
@@ -101,15 +102,15 @@ export function ActivityFeed({ students, expenses, miscIncomes }: ActivityFeedPr
                   key={item.id}
                   disabled={!clickable}
                   onClick={() => clickable && setSelectedReceipt(item)}
-                  className={`flex w-full items-center gap-3 rounded-2xl border-2 border-border bg-background p-3 text-left transition-all ${
+                  className={`flex w-full items-center gap-3 rounded-xl border border-border bg-background p-3 text-left transition-all ${
                     clickable ? "cursor-pointer hover:border-primary/50" : "cursor-default"
                   }`}
                 >
                   <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl ${
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                       isIncome
-                        ? "bg-success-soft text-success"
-                        : "bg-chart-expense/12 text-chart-expense"
+                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400"
+                        : "bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400"
                     }`}
                   >
                     {isIncome ? (
@@ -120,14 +121,18 @@ export function ActivityFeed({ students, expenses, miscIncomes }: ActivityFeedPr
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-bold">{item.title}</p>
-                    <p className="truncate text-[10px] font-medium text-muted-foreground">
-                      {item.subtitle} · {formatDateShort(item.date)}
-                      {clickable && " · 📷 lihat nota"}
+                    <p className="flex items-center gap-1 truncate text-[10px] font-medium text-muted-foreground">
+                      <span>{item.subtitle} · {formatDateShort(item.date)}</span>
+                      {clickable && (
+                        <span className="inline-flex items-center gap-0.5 text-indigo-600 dark:text-indigo-400 font-semibold ml-1">
+                          · <Camera className="h-3 w-3" /> lihat nota
+                        </span>
+                      )}
                     </p>
                   </div>
                   <span
                     className={`shrink-0 text-xs font-extrabold ${
-                      isIncome ? "text-success" : "text-chart-expense"
+                      isIncome ? "text-emerald-600 dark:text-emerald-400" : "text-orange-600 dark:text-orange-400"
                     }`}
                   >
                     {isIncome ? "+" : "−"}
@@ -156,12 +161,12 @@ export function ActivityFeed({ students, expenses, miscIncomes }: ActivityFeedPr
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.25 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-md rounded-3xl border-2 border-border bg-card p-5 shadow-2xl"
+              className="relative w-full max-w-md rounded-2xl border border-border bg-card p-5 shadow-xl"
             >
               <button
                 onClick={() => setSelectedReceipt(null)}
                 aria-label="Tutup"
-                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -169,12 +174,12 @@ export function ActivityFeed({ students, expenses, miscIncomes }: ActivityFeedPr
               <p className="pr-10 text-sm font-extrabold">{selectedReceipt.title}</p>
               <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
                 {selectedReceipt.category} · {formatDateShort(selectedReceipt.date)} ·{" "}
-                <span className="font-extrabold text-chart-expense">
+                <span className="font-extrabold text-orange-600 dark:text-orange-400">
                   {formatRupiah(selectedReceipt.amount)}
                 </span>
               </p>
 
-              <div className="mt-4 flex max-h-[60vh] min-h-48 items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-background">
+              <div className="mt-4 flex max-h-[60vh] min-h-48 items-center justify-center overflow-hidden rounded-xl border border-border bg-background">
                 {selectedReceipt.receiptUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img

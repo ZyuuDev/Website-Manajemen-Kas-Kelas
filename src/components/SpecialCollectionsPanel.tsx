@@ -29,11 +29,11 @@ export function SpecialCollectionsPanel({
     setExpandedId((prev) => (prev === id ? null : id));
 
   return (
-    <div className="rounded-3xl border-2 border-border bg-card p-5 sm:p-6">
+    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
       {/* Header */}
       <div className="mb-4 flex items-start gap-2.5">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-          <ClipboardList className="h-5 w-5" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+          <ClipboardList className="h-4.5 w-4.5" />
         </div>
         <div>
           <h3 className="text-sm font-extrabold">Iuran Khusus</h3>
@@ -53,8 +53,8 @@ export function SpecialCollectionsPanel({
           return (
             <div
               key={col.id}
-              className={`rounded-3xl border-2 bg-background transition-colors ${
-                isOpen ? "border-primary/50 md:col-span-2" : "border-border"
+              className={`rounded-xl border bg-background transition-colors ${
+                isOpen ? "border-indigo-500/50 md:col-span-2" : "border-border"
               }`}
             >
               <button
@@ -77,7 +77,7 @@ export function SpecialCollectionsPanel({
                   <div className="mt-2.5 flex items-center gap-2">
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
                       <div
-                        className="h-full rounded-full bg-success transition-all"
+                        className="h-full rounded-full bg-emerald-500 transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -103,25 +103,25 @@ export function SpecialCollectionsPanel({
                     transition={{ duration: 0.25 }}
                     className="overflow-hidden"
                   >
-                    <div className="grid grid-cols-1 gap-1.5 border-t-2 border-border p-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-1.5 border-t border-border p-4 sm:grid-cols-2 lg:grid-cols-3">
                       {students.map((std) => {
                         const hasPaid = col.paidIds.includes(std.id);
                         return (
                           <div
                             key={std.id}
-                            className="flex items-center gap-2 rounded-xl bg-card px-3 py-2"
+                            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
                           >
                             {hasPaid ? (
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
+                              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
                             ) : (
-                              <XCircle className="h-4 w-4 shrink-0 text-destructive" />
+                              <XCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
                             )}
                             <span className="min-w-0 flex-1 truncate text-xs font-semibold">
                               {std.name}
                             </span>
                             <span
                               className={`shrink-0 text-[10px] font-extrabold ${
-                                hasPaid ? "text-success" : "text-destructive"
+                                hasPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                               }`}
                             >
                               {hasPaid ? "Sudah" : "Belum"}

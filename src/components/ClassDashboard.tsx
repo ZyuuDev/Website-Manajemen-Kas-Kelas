@@ -63,9 +63,11 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
   const [showQrisModal, setShowQrisModal] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
+    let activeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    async function loadData(isInitial = true) {
       try {
-        setLoadState({ status: "loading" });
+        if (isInitial) setLoadState({ status: "loading" });
 
         // 1. Cari kelas: via slug, atau kelas default (mode 1 kelas)
         const classColumns = "id, name, slug, weekly_fee, semester_start_date, qris_url";
@@ -109,6 +111,33 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
             setLoadState({ status: "empty" });
           }
           return;
+        }
+
+        // Jalankan listener Realtime Supabase jika belum aktif
+        if (!activeChannel) {
+          activeChannel = supabase
+            .channel(`sakukelas-realtime-${classData.id}`)
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "transactions", filter: `class_id=eq.${classData.id}` },
+              () => loadData(false)
+            )
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "special_collections", filter: `class_id=eq.${classData.id}` },
+              () => loadData(false)
+            )
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "special_collection_payments" },
+              () => loadData(false)
+            )
+            .on(
+              "postgres_changes",
+              { event: "*", schema: "public", table: "students", filter: `class_id=eq.${classData.id}` },
+              () => loadData(false)
+            )
+            .subscribe();
         }
 
         // 2. Semester aktif — seluruh data di bawah dibatasi ke semester ini
@@ -319,6 +348,12 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
     }
 
     loadData();
+
+    return () => {
+      if (activeChannel) {
+        supabase.removeChannel(activeChannel);
+      }
+    };
   }, [slug]);
 
   /* ── Loading ── */
@@ -428,11 +463,11 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b-2 border-border bg-background/85 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-violet-500 to-fuchsia-500 shadow-lg shadow-violet-500/25">
-              <Wallet className="h-5 w-5 text-white" />
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
+              <Wallet className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-sm font-extrabold sm:text-base">
@@ -452,7 +487,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
             {classInfo.qrisUrl && (
               <button
                 onClick={() => setShowQrisModal(true)}
-                className="flex h-10 items-center gap-1.5 rounded-2xl bg-linear-to-r from-violet-500 to-fuchsia-500 px-3.5 text-xs font-extrabold text-white shadow-lg shadow-violet-500/25 transition-all hover:brightness-110 active:scale-95 sm:px-4"
+                className="flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-95 sm:px-4"
               >
                 <QrCode className="h-4 w-4" />
                 <span className="hidden min-[400px]:inline">Bayar QRIS</span>
@@ -472,10 +507,11 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           transition={{ duration: 0.45 }}
           className="flex flex-wrap items-center gap-x-3 gap-y-1"
         >
-          <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-            Halo, warga kelas {classInfo.name}! 👋
+          <h2 className="flex items-center gap-2 text-xl font-extrabold tracking-tight sm:text-2xl">
+            <span>Halo, warga kelas {classInfo.name}!</span>
+            <Sparkles className="h-5 w-5 text-indigo-500 stroke-[2.2]" />
           </h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-border bg-card px-3 py-1 text-[11px] font-bold text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-bold text-muted-foreground">
             <Calendar className="h-3 w-3 text-primary" />
             Minggu ke-{stats.elapsedWeeks}
           </span>
@@ -550,7 +586,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-6 border-t-2 border-border py-6">
+      <footer className="mt-6 border-t border-border py-6">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-1.5 px-4 text-center text-[11px] font-medium text-muted-foreground">
           <p className="inline-flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
@@ -576,19 +612,19 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.25 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-3xl border-2 border-border bg-card p-6 shadow-2xl"
+              className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl"
             >
               <button
                 onClick={() => setShowQrisModal(false)}
                 aria-label="Tutup"
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border-2 border-border text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-                  <QrCode className="h-5 w-5" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+                  <QrCode className="h-4.5 w-4.5" />
                 </div>
                 <div>
                   <p className="text-sm font-extrabold">QRIS Pembayaran Kas</p>
@@ -598,7 +634,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
                 </div>
               </div>
 
-              <div className="mb-4 flex h-64 items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-white p-3">
+              <div className="mb-4 flex h-64 items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={classInfo.qrisUrl}
@@ -607,7 +643,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
                 />
               </div>
 
-              <div className="flex items-start gap-2.5 rounded-2xl border-2 border-primary/20 bg-accent p-3 text-xs font-medium text-accent-foreground">
+              <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-accent p-3 text-xs font-medium text-accent-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
                   Setelah membayar, tunjukkan bukti transfer ke bendahara di kelas

@@ -13,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 // Dijalankan sebelum halaman dirender agar tidak terjadi kedipan tema (FOUC).
-// Prioritas: ?theme=dark|light → pilihan tersimpan → preferensi perangkat.
-const themeInitScript = `(function(){try{var q=new URLSearchParams(location.search).get("theme");var t=q||localStorage.getItem("sakukelas-theme");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var c=document.documentElement.classList;d?c.add("dark"):c.remove("dark");}catch(e){}})();`;
+// Default: TEMA TERANG (White/Light Mode). Menggunakan dark mode hanya jika pengguna memilihnya.
+const themeInitScript = `(function(){try{var q=new URLSearchParams(location.search).get("theme");var t=q||localStorage.getItem("sakukelas-theme");var d=t==="dark";var c=document.documentElement.classList;d?c.add("dark"):c.remove("dark");}catch(e){}})();`;
 
 export default function RootLayout({
   children,
