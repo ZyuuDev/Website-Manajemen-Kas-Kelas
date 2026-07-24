@@ -12,6 +12,8 @@ import {
   Info,
   CalendarOff,
   Sparkles,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase";
@@ -36,6 +38,8 @@ import { WallOfShame } from "@/components/WallOfShame";
 import { StudentSearch } from "@/components/StudentSearch";
 import { ActivityFeed } from "@/components/ActivityFeed";
 import { SpecialCollectionsPanel } from "@/components/SpecialCollectionsPanel";
+import { BukuKasMatrix } from "@/components/BukuKasMatrix";
+import { ExportReportModal } from "@/components/ExportReportModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface ClassDashboardProps {
@@ -62,6 +66,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
   const [chartData, setChartData] = useState<CashFlowWeek[]>([]);
   const [specialCollections, setSpecialCollections] = useState<SpecialCollectionInfo[]>([]);
   const [showQrisModal, setShowQrisModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     let activeChannel: ReturnType<typeof supabase.channel> | null = null;
@@ -491,6 +496,14 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <button
+              onClick={() => setShowExportModal(true)}
+              className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs font-bold text-foreground transition-all hover:bg-accent hover:border-primary/50 active:scale-95 sm:px-3.5"
+            >
+              <Download className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+              <span className="hidden min-[480px]:inline">Ekspor Laporan</span>
+            </button>
+
             {classInfo.qrisUrl && (
               <button
                 onClick={() => setShowQrisModal(true)}
@@ -553,7 +566,20 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           </div>
         </motion.section>
 
-        {/* Baris 3: Self-check + aktivitas */}
+        {/* Baris 3: Buku Kas Online (Matriks Setoran Mingguan) */}
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.12 }}
+        >
+          <BukuKasMatrix
+            students={stats.students}
+            weeklyAmount={classInfo.weeklyAmount}
+            elapsedWeeks={stats.elapsedWeeks}
+          />
+        </motion.section>
+
+        {/* Baris 4: Self-check + aktivitas */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -577,7 +603,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           </div>
         </motion.section>
 
-        {/* Baris 4: Iuran khusus */}
+        {/* Baris 5: Iuran khusus */}
         {specialCollections.length > 0 && (
           <motion.section
             initial={{ opacity: 0, y: 14 }}
@@ -593,13 +619,26 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-6 border-t border-border py-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-1.5 px-4 text-center text-[11px] font-medium text-muted-foreground">
-          <p className="inline-flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            SakuKelas · Data sinkron langsung dari aplikasi bendahara
-          </p>
-          <p>Portal ini hanya-baca (read-only) demi keamanan data kelas.</p>
+      <footer className="mt-auto border-t border-border bg-card/40 py-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+              <Wallet className="h-3.5 w-3.5" />
+            </div>
+            <span className="text-xs font-extrabold text-foreground tracking-tight">
+              Saku<span className="text-primary">Kelas</span>
+            </span>
+          </div>
+
+          <div className="flex flex-col items-center gap-1 text-center sm:items-end sm:text-right text-xs font-medium text-muted-foreground">
+            <p className="inline-flex items-center gap-1.5 font-semibold text-foreground/85">
+              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+              SakuKelas · Portal Transparansi Kas Kelas
+            </p>
+            <p className="text-[11px]">
+              Data tersinkronisasi otomatis · Mode hanya-baca (Read-Only)
+            </p>
+          </div>
         </div>
       </footer>
 
@@ -619,7 +658,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.25 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl"
+              className="relative w-full max-w-sm sm:max-w-md rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xl"
             >
               <button
                 onClick={() => setShowQrisModal(false)}
@@ -634,33 +673,55 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
                   <QrCode className="h-4.5 w-4.5" />
                 </div>
                 <div>
-                  <p className="text-sm font-extrabold">QRIS Pembayaran Kas</p>
+                  <p className="text-sm font-extrabold text-foreground">QRIS Pembayaran Kas</p>
                   <p className="text-[10px] text-muted-foreground">
-                    Scan untuk bayar iuran
+                    Scan menggunakan E-Wallet atau Mobile Banking
                   </p>
                 </div>
               </div>
 
-              <div className="mb-4 flex h-64 items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-3">
+              {/* Bingkai gambar QRIS proporsional */}
+              <div className="relative mb-4 flex aspect-square max-h-[300px] sm:max-h-[340px] w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-4 shadow-2xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={classInfo.qrisUrl}
                   alt="QRIS Pembayaran Kas Kelas"
-                  className="h-full w-full rounded-lg object-contain"
+                  className="h-full w-full object-contain rounded-md"
                 />
               </div>
 
-              <div className="flex items-start gap-2.5 rounded-xl border border-primary/20 bg-accent p-3 text-xs font-medium text-accent-foreground">
+              <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-accent p-3 text-xs font-medium text-accent-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  Setelah membayar, tunjukkan bukti transfer ke bendahara di kelas
-                  agar dicatat.
+                  Setelah membayar via QRIS, harap tunjukkan bukti pembayaran ke bendahara agar dapat diinput.
                 </span>
               </div>
+
+              <a
+                href={classInfo.qrisUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-xs font-bold text-foreground transition-all hover:bg-accent"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Buka Gambar QRIS Ukuran Penuh
+              </a>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Modal Ekspor Laporan */}
+      {stats && (
+        <ExportReportModal
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+          classInfo={classInfo}
+          stats={stats}
+          students={students}
+          expenses={expenses}
+        />
+      )}
     </div>
   );
 }
