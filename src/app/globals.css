@@ -159,6 +159,15 @@
   }
 }
 
+/* Reset outline & border pada SVG Recharts agar tidak muncul kotak ungu/focus outline */
+.recharts-wrapper,
+.recharts-wrapper *:focus,
+.recharts-wrapper *:focus-visible,
+.recharts-surface,
+.recharts-surface:focus {
+  outline: none !important;
+}
+
 /* Sembunyikan scrollbar tapi tetap bisa scroll (daftar panjang di kartu) */
 .scrollbar-none {
   scrollbar-width: none;
@@ -166,3 +175,4 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
