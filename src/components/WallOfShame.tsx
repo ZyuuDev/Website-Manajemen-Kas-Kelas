@@ -97,7 +97,7 @@ export function WallOfShame({ students }: WallOfShameProps) {
       </div>
 
       {/* List content (Clean scroll tanpa kepotong) */}
-      <div className="scrollbar-none min-h-[280px] flex-1 overflow-y-auto p-4 sm:p-5 pt-3 sm:pt-4 space-y-2 max-h-[440px]">
+      <div className="scrollbar-none min-h-70 flex-1 overflow-y-auto p-4 sm:p-5 pt-3 sm:pt-4 space-y-2 max-h-110">
         <AnimatePresence mode="wait">
           {activeTab === "fame" ? (
             <motion.div

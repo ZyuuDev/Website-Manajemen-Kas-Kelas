@@ -36,7 +36,7 @@ function ChartTooltip({ active, payload, label }: any) {
   const netWeek = incomeVal - expenseVal;
 
   return (
-    <div className="min-w-[190px] rounded-2xl border-2 border-border bg-popover/95 p-3.5 text-xs shadow-xl backdrop-blur-sm">
+    <div className="min-w-47.5 rounded-2xl border-2 border-border bg-popover/95 p-3.5 text-xs shadow-xl backdrop-blur-sm">
       <div className="mb-2.5 flex items-center justify-between border-b-2 border-border pb-2">
         <span className="font-extrabold text-popover-foreground">{label}</span>
         {netWeek !== 0 && (
@@ -166,9 +166,9 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
       </div>
 
       {/* Chart */}
-      <div className="min-h-[260px] flex-1 sm:min-h-[300px]">
+      <div className="min-h-65 flex-1 sm:min-h-75">
         {!hasData ? (
-          <div className="flex h-full min-h-[260px] flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-12 text-center">
+          <div className="flex h-full min-h-65 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-12 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <BarChart3 className="h-5 w-5" />
             </div>

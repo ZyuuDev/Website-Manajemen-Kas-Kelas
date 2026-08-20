@@ -88,7 +88,7 @@ export function BukuKasMatrix({
                   return (
                     <th
                       key={w}
-                      className={`px-2.5 py-3 text-center whitespace-nowrap min-w-[54px] ${
+                      className={`px-2.5 py-3 text-center whitespace-nowrap min-w-13.5 ${
                         isCurrent
                           ? "bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-extrabold"
                           : ""
@@ -127,7 +127,7 @@ export function BukuKasMatrix({
                       {/* Sticky Nama Siswa */}
                       <td className="sticky left-0 z-10 bg-card px-4 py-2.5 font-bold text-foreground shadow-[1px_0_0_0_rgba(0,0,0,0.06)] dark:shadow-[1px_0_0_0_rgba(255,255,255,0.08)] whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="truncate max-w-[140px] sm:max-w-[180px]">
+                          <span className="truncate max-w-35 sm:max-w-45">
                             {std.name}
                           </span>
                         </div>
@@ -137,12 +137,12 @@ export function BukuKasMatrix({
                       <td className="px-3 py-2.5 text-center whitespace-nowrap">
                         {std.isLunas ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 px-2 py-0.5 text-[10px] font-extrabold">
-                            <Check className="h-3 w-3 stroke-[3]" />
+                            <Check className="h-3 w-3 stroke-3" />
                             Lunas
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400 px-2 py-0.5 text-[10px] font-extrabold">
-                            <X className="h-3 w-3 stroke-[3]" />
+                            <X className="h-3 w-3 stroke-3" />
                             Nunggak
                           </span>
                         )}
@@ -175,21 +175,21 @@ export function BukuKasMatrix({
                                   title={`Minggu ${w}: Terbayar Lunas`}
                                   className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-400 dark:border-emerald-800 shadow-2xs"
                                 >
-                                  <Check className="h-3.5 w-3.5 stroke-[3]" />
+                                  <Check className="h-3.5 w-3.5 stroke-3" />
                                 </span>
                               ) : isPastOrCurrent ? (
                                 <span
                                   title={`Minggu ${w}: Belum Terbayar (Nunggak)`}
                                   className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/70 dark:text-rose-400 dark:border-rose-800 shadow-2xs"
                                 >
-                                  <X className="h-3.5 w-3.5 stroke-[3]" />
+                                  <X className="h-3.5 w-3.5 stroke-3" />
                                 </span>
                               ) : (
                                 <span
                                   title={`Minggu ${w}: Belum Jatuh Tempo`}
                                   className="flex h-6 w-6 items-center justify-center rounded-lg bg-muted/30 text-muted-foreground/40 border border-border/50"
                                 >
-                                  <Minus className="h-3 w-3 stroke-[2]" />
+                                  <Minus className="h-3 w-3 stroke-2" />
                                 </span>
                               )}
                             </div>
@@ -213,19 +213,19 @@ export function BukuKasMatrix({
           </span>
           <div className="flex items-center gap-1.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-400 dark:border-emerald-800">
-              <Check className="h-3 w-3 stroke-[3]" />
+              <Check className="h-3 w-3 stroke-3" />
             </span>
             <span>Lunas / Terbayar</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-rose-50 text-rose-600 border border-rose-200 dark:bg-rose-950/70 dark:text-rose-400 dark:border-rose-800">
-              <X className="h-3 w-3 stroke-[3]" />
+              <X className="h-3 w-3 stroke-3" />
             </span>
             <span>Nunggak (Lewat Jatuh Tempo)</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-muted/30 text-muted-foreground/40 border border-border/50">
-              <Minus className="h-3 w-3 stroke-[2]" />
+              <Minus className="h-3 w-3 stroke-2" />
             </span>
             <span>Belum Jatuh Tempo</span>
           </div>

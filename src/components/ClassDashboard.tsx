@@ -715,7 +715,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               </div>
 
               {/* Bingkai gambar QRIS proporsional */}
-              <div className="relative mb-4 flex aspect-square max-h-[290px] sm:max-h-[320px] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-white p-4 shadow-xs">
+              <div className="relative mb-4 flex aspect-square max-h-72.5 sm:max-h-80 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-white p-4 shadow-xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={classInfo.qrisUrl}
