@@ -31,15 +31,15 @@ function CustomTooltip({ active, payload }: any) {
   if (!active || !payload || payload.length === 0) return null;
   const data = payload[0];
   return (
-    <div className="rounded-xl border border-border bg-popover p-3 text-xs shadow-lg">
+    <div className="min-w-[160px] rounded-2xl border-2 border-border bg-popover/95 p-3 text-xs shadow-xl backdrop-blur-sm">
       <div className="flex items-center gap-2 font-bold text-popover-foreground">
         <span
-          className="h-2.5 w-2.5 rounded-full"
+          className="h-2.5 w-2.5 rounded-full shrink-0"
           style={{ backgroundColor: data.color }}
         />
-        <span>{data.name}</span>
+        <span className="truncate">{data.name}</span>
       </div>
-      <p className="mt-1 font-mono font-extrabold text-foreground">
+      <p className="mt-1.5 font-mono text-sm font-extrabold text-foreground">
         {formatRupiah(data.value)}
       </p>
     </div>
@@ -56,7 +56,7 @@ function CustomLegend({ payload }: any) {
           className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground"
         >
           <span
-            className="h-2.5 w-2.5 rounded-full"
+            className="h-2 w-2 rounded-full shrink-0"
             style={{ backgroundColor: entry.color }}
           />
           {entry.value}
@@ -80,26 +80,34 @@ export function ExpenseBreakdownChart({ expenses }: ExpenseBreakdownChartProps) 
     .sort((a, b) => b.value - a.value);
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-xs">
       {/* Header */}
-      <div className="mb-4 flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
-          <PieIcon className="h-4.5 w-4.5" />
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex items-start gap-2.5">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
+            <PieIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="text-sm font-extrabold text-foreground">
+              Alokasi Pengeluaran
+            </h3>
+            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
+              Distribusi penggunaan kas per kategori
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-extrabold text-foreground">
-            Alokasi Pengeluaran
-          </h3>
-          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-            Distribusi penggunaan kas kelas per kategori
-          </p>
-        </div>
+
+        {totalExpense > 0 && (
+          <span className="hidden sm:inline-flex rounded-xl border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-bold font-mono text-muted-foreground">
+            Total: {formatRupiah(totalExpense)}
+          </span>
+        )}
       </div>
 
       {/* Body */}
       {chartData.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border py-12 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-accent-foreground">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-12 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
             <ShoppingBag className="h-5 w-5" />
           </div>
           <p className="text-xs font-bold text-muted-foreground">
@@ -111,15 +119,15 @@ export function ExpenseBreakdownChart({ expenses }: ExpenseBreakdownChartProps) 
         </div>
       ) : (
         <div className="flex flex-1 flex-col justify-between">
-          <div className="min-h-[220px] flex-1">
-            <ResponsiveContainer width="100%" height="100%" minHeight={220}>
-              <PieChart>
+          <div className="min-h-[200px] flex-1 sm:min-h-[220px]">
+            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
+              <PieChart accessibilityLayer={false}>
                 <Pie
                   data={chartData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={55}
-                  outerRadius={80}
+                  innerRadius={50}
+                  outerRadius={75}
                   paddingAngle={4}
                   dataKey="value"
                   isAnimationActive={false}
@@ -129,7 +137,7 @@ export function ExpenseBreakdownChart({ expenses }: ExpenseBreakdownChartProps) 
                       key={`cell-${index}`}
                       fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
                       stroke="var(--card)"
-                      strokeWidth={2}
+                      strokeWidth={2.5}
                     />
                   ))}
                 </Pie>
@@ -139,7 +147,7 @@ export function ExpenseBreakdownChart({ expenses }: ExpenseBreakdownChartProps) 
             </ResponsiveContainer>
           </div>
 
-          {/* Top category breakdown */}
+          {/* Top category breakdown list */}
           <div className="mt-3 divide-y divide-border border-t border-border pt-3">
             {chartData.slice(0, 3).map((item, idx) => {
               const pct = Math.round((item.value / Math.max(1, totalExpense)) * 100);

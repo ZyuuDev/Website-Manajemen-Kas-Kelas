@@ -35,7 +35,7 @@ export function BukuKasMatrix({
     : students;
 
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
+    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-xs">
       {/* Header */}
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-2.5">

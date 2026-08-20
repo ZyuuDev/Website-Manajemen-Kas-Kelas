@@ -34,6 +34,7 @@ import type {
 } from "@/lib/types";
 import { BalanceCard } from "@/components/BalanceCard";
 import { CashFlowChart } from "@/components/CashFlowChart";
+import { ExpenseBreakdownChart } from "@/components/ExpenseBreakdownChart";
 import { WallOfShame } from "@/components/WallOfShame";
 import { StudentSearch } from "@/components/StudentSearch";
 import { ActivityFeed } from "@/components/ActivityFeed";
@@ -67,6 +68,29 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
   const [specialCollections, setSpecialCollections] = useState<SpecialCollectionInfo[]>([]);
   const [showQrisModal, setShowQrisModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [isDownloadingQris, setIsDownloadingQris] = useState(false);
+
+  const handleDownloadQris = async () => {
+    if (!classInfo?.qrisUrl) return;
+    try {
+      setIsDownloadingQris(true);
+      const response = await fetch(classInfo.qrisUrl);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = `QRIS-Kas-${classInfo.name.replace(/\s+/g, "-")}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error("Gagal download otomatis, membuka tab baru:", err);
+      window.open(classInfo.qrisUrl, "_blank");
+    } finally {
+      setIsDownloadingQris(false);
+    }
+  };
 
   useEffect(() => {
     let activeChannel: ReturnType<typeof supabase.channel> | null = null;
@@ -551,7 +575,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           />
         </motion.section>
 
-        {/* Baris 2: Grafik + daftar tunggakan */}
+        {/* Baris 2: Grafik Arus Kas + Alokasi Pengeluaran */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -562,15 +586,16 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
             <CashFlowChart data={chartData} />
           </div>
           <div>
-            <WallOfShame students={stats.students} weeklyAmount={classInfo.weeklyAmount} />
+            <ExpenseBreakdownChart expenses={expenses} />
           </div>
         </motion.section>
 
-        {/* Baris 3: Buku Kas Online (Matriks Setoran Mingguan) */}
+        {/* Baris 3: Buku Kas Online (Matriks Setoran Mingguan) — FULL WIDTH */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.12 }}
+          className="w-full"
         >
           <BukuKasMatrix
             students={stats.students}
@@ -579,7 +604,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           />
         </motion.section>
 
-        {/* Baris 4: Self-check + aktivitas */}
+        {/* Baris 4: Self-Check Siswa + Wall of Fame / Papan Tunggakan */}
         <motion.section
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -592,8 +617,23 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               elapsedWeeks={stats.elapsedWeeks}
               weeklyAmount={classInfo.weeklyAmount}
               allCollections={specialCollections}
+              classNameText={classInfo.name}
             />
           </div>
+          <div>
+            <WallOfShame students={stats.students} weeklyAmount={classInfo.weeklyAmount} />
+          </div>
+        </motion.section>
+
+        {/* Baris 5: Aktivitas Terkini + Iuran Khusus */}
+        <motion.section
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.18 }}
+          className={`grid grid-cols-1 gap-5 sm:gap-6 ${
+            specialCollections.length > 0 ? "lg:grid-cols-2" : "lg:grid-cols-1"
+          }`}
+        >
           <div>
             <ActivityFeed
               students={students}
@@ -601,21 +641,15 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               miscIncomes={stats.miscIncomes}
             />
           </div>
+          {specialCollections.length > 0 && (
+            <div>
+              <SpecialCollectionsPanel
+                collections={specialCollections}
+                students={stats.students.map((s) => ({ id: s.id, name: s.name, nis: s.nis }))}
+              />
+            </div>
+          )}
         </motion.section>
-
-        {/* Baris 5: Iuran khusus */}
-        {specialCollections.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, delay: 0.2 }}
-          >
-            <SpecialCollectionsPanel
-              collections={specialCollections}
-              students={stats.students.map((s) => ({ id: s.id, name: s.name, nis: s.nis }))}
-            />
-          </motion.section>
-        )}
       </main>
 
       {/* Footer */}
@@ -658,19 +692,19 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               exit={{ opacity: 0, scale: 0.95, y: 8 }}
               transition={{ duration: 0.25 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm sm:max-w-md rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xl"
+              className="relative w-full max-w-sm sm:max-w-md rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-2xl"
             >
               <button
                 onClick={() => setShowQrisModal(false)}
                 aria-label="Tutup"
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
+                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                  <QrCode className="h-4.5 w-4.5" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
+                  <QrCode className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-sm font-extrabold text-foreground">QRIS Pembayaran Kas</p>
@@ -681,31 +715,42 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
               </div>
 
               {/* Bingkai gambar QRIS proporsional */}
-              <div className="relative mb-4 flex aspect-square max-h-[300px] sm:max-h-[340px] w-full items-center justify-center overflow-hidden rounded-xl border border-border bg-white p-4 shadow-2xs">
+              <div className="relative mb-4 flex aspect-square max-h-[290px] sm:max-h-[320px] w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-white p-4 shadow-xs">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={classInfo.qrisUrl}
                   alt="QRIS Pembayaran Kas Kelas"
-                  className="h-full w-full object-contain rounded-md"
+                  className="h-full w-full object-contain rounded-lg"
                 />
               </div>
 
-              <div className="mb-3 flex items-start gap-2.5 rounded-xl border border-primary/20 bg-accent p-3 text-xs font-medium text-accent-foreground">
+              <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-accent/80 p-3 text-xs font-medium text-accent-foreground">
                 <Info className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  Setelah membayar via QRIS, harap tunjukkan bukti pembayaran ke bendahara agar dapat diinput.
+                  Setelah transfer via QRIS, kirim konfirmasi dan bukti bayar ke bendahara kelas agar segera dicatat.
                 </span>
               </div>
 
-              <a
-                href={classInfo.qrisUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2.5 text-xs font-bold text-foreground transition-all hover:bg-accent"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Buka Gambar QRIS Ukuran Penuh
-              </a>
+              <div className="flex flex-col gap-2">
+                <button
+                  onClick={handleDownloadQris}
+                  disabled={isDownloadingQris}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>{isDownloadingQris ? "Mengunduh…" : "Unduh Gambar QRIS"}</span>
+                </button>
+
+                <a
+                  href={classInfo.qrisUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2 text-xs font-semibold text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  Buka Gambar Ukuran Penuh
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         )}
