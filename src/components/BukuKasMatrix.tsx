@@ -52,7 +52,7 @@ export function BukuKasMatrix({
               </span>
             </div>
             <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-              Rekapitulasi setoran kas tiap siswa per minggu (Lunas ✓ · Nunggak ✗)
+              Rekapitulasi setoran kas tiap siswa per minggu (Lunas / Nunggak)
             </p>
           </div>
         </div>

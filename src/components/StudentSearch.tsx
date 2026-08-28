@@ -68,7 +68,7 @@ export function StudentSearch({
 
     const message = isLunas
       ? `Halo Bendahara ${classNameText},\nSaya *${student.name}* (NIS: ${student.nis || "-"}).\nAlhamdulillah status kas saya sudah *Lunas Penuh* (${formatRupiah(student.totalPaid)}).\nTerima kasih!`
-      : `Halo Bendahara ${classNameText},\nSaya *${student.name}* (NIS: ${student.nis || "-"}).\nSaya ingin konfirmasi pembayaran uang kas:\n• Status: Nunggak ${student.debtWeeks} minggu\n• Nominal Kas: ${formatRupiah(student.debt)}${collectionText}\n\nBerikut saya lampirkan bukti pembayaran. Mohon dicek dan dicatat ya. Terima kasih! 🙏`;
+      : `Halo Bendahara ${classNameText},\nSaya *${student.name}* (NIS: ${student.nis || "-"}).\nSaya ingin konfirmasi pembayaran uang kas:\n• Status: Nunggak ${student.debtWeeks} minggu\n• Nominal Kas: ${formatRupiah(student.debt)}${collectionText}\n\nBerikut saya lampirkan bukti pembayaran. Mohon dicek dan dicatat ya. Terima kasih.`;
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");

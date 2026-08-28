@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Sparkles, Trophy, Award } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Sparkles, Trophy, Award, Medal, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatRupiah } from "@/lib/utils";
 import type { StudentStats } from "@/lib/types";
@@ -150,10 +150,18 @@ export function WallOfShame({ students }: WallOfShameProps) {
                             ? "bg-slate-400 text-white"
                             : isTop3
                             ? "bg-amber-700 text-white"
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 text-[10px]"
                         }`}
                       >
-                        {isTop1 ? "🥇" : isTop2 ? "🥈" : isTop3 ? "🥉" : index + 1}
+                        {isTop1 ? (
+                          <Trophy className="h-3.5 w-3.5" />
+                        ) : isTop2 ? (
+                          <Medal className="h-3.5 w-3.5" />
+                        ) : isTop3 ? (
+                          <Award className="h-3.5 w-3.5" />
+                        ) : (
+                          index + 1
+                        )}
                       </span>
 
                       {/* Initials avatar */}
@@ -171,8 +179,9 @@ export function WallOfShame({ students }: WallOfShameProps) {
                             </span>
                           )}
                         </div>
-                        <p className="truncate text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
-                          ✓ Lunas Semester Ini
+                        <p className="flex items-center gap-1 truncate text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                          <Check className="h-3 w-3 shrink-0" />
+                          <span>Lunas Semester Ini</span>
                         </p>
                       </div>
 
