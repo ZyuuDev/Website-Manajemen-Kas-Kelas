@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Download, Printer, FileSpreadsheet, X, FileText } from "lucide-react";
+import { GlassDialog } from "@/components/GlassDialog";
+import { ArrowUpRight, Printer, FileSpreadsheet } from "lucide-react";
 import { formatRupiah, formatDateLong } from "@/lib/utils";
 import type {
   ClassInfo,
@@ -29,7 +29,6 @@ export function ExportReportModal({
   students,
   expenses,
 }: ExportReportModalProps) {
-  if (!isOpen) return null;
 
   const todayStr = formatDateLong(new Date().toISOString());
 
@@ -222,109 +221,16 @@ export function ExportReportModal({
   };
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 12 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 8 }}
-          transition={{ duration: 0.2 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
-        >
-          <button
-            onClick={onClose}
-            aria-label="Tutup"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          {/* Header */}
-          <div className="mb-5 flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-              <Download className="h-5 w-5" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-foreground">
-                Ekspor Laporan Kas Kelas
-              </h3>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Unduh rekapitulasi keuangan kelas dalam format PDF atau Excel/CSV
-              </p>
-            </div>
-          </div>
-
-          {/* Info Card */}
-          <div className="mb-5 rounded-xl border border-border bg-background p-3.5 text-xs space-y-1">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground font-medium">Kelas:</span>
-              <span className="font-bold text-foreground">{classInfo.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground font-medium">Saldo Kas:</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400">
-                {formatRupiah(stats.liveBalance)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground font-medium">Total Tunggakan:</span>
-              <span className="font-bold text-rose-600 dark:text-rose-400">
-                {formatRupiah(stats.totalDebt)}
-              </span>
-            </div>
-          </div>
-
-          {/* Opsi Ekspor */}
-          <div className="space-y-3">
-            <button
-              onClick={handlePrintPDF}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background p-3.5 text-left transition-all hover:border-indigo-500/60 hover:bg-accent"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                  <Printer className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-foreground">
-                    Cetak / Simpan PDF
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Format cetak resmi laporan kas kelas
-                  </p>
-                </div>
-              </div>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </button>
-
-            <button
-              onClick={handleDownloadCSV}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-background p-3.5 text-left transition-all hover:border-emerald-500/60 hover:bg-accent"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-                  <FileSpreadsheet className="h-4.5 w-4.5" />
-                </div>
-                <div>
-                  <p className="text-xs font-extrabold text-foreground">
-                    Unduh Excel / CSV
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    File spreadsheet data mentah transaksi & siswa
-                  </p>
-                </div>
-              </div>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+    <GlassDialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}
+      eyebrow="Dokumen kelas" title="Unduh laporan" description={`${classInfo.name} · ${classInfo.academicYear}`}>
+      <dl className="section-surface grid grid-cols-2 gap-4 p-5">
+        <div><dt className="text-[10px] text-muted-foreground">Saldo kas</dt><dd className="mt-2 break-words text-lg font-medium tracking-tight tabular-nums">{formatRupiah(stats.liveBalance)}</dd></div>
+        <div><dt className="text-[10px] text-muted-foreground">Tunggakan</dt><dd className="mt-2 break-words text-lg font-medium tracking-tight tabular-nums">{formatRupiah(stats.totalDebt)}</dd></div>
+      </dl>
+      <div className="mt-1 space-y-3">
+        <button type="button" onClick={handlePrintPDF} className="export-option"><Printer className="size-5 shrink-0 text-primary" /><div className="flex-1"><p className="text-xs font-semibold">Cetak / simpan PDF</p><p className="mt-1 text-[10px] text-muted-foreground">Laporan kas dengan format siap cetak.</p></div><ArrowUpRight className="size-3.5 text-muted-foreground" /></button>
+        <button type="button" onClick={handleDownloadCSV} className="export-option"><FileSpreadsheet className="size-5 shrink-0 text-primary" /><div className="flex-1"><p className="text-xs font-semibold">Unduh CSV</p><p className="mt-1 text-[10px] text-muted-foreground">Data siswa dan transaksi untuk spreadsheet.</p></div><ArrowUpRight className="size-3.5 text-muted-foreground" /></button>
+      </div>
+    </GlassDialog>
   );
 }

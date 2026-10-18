@@ -1,175 +1,57 @@
 "use client";
 
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { PieChart as PieIcon, ShoppingBag } from "lucide-react";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { formatRupiah } from "@/lib/utils";
 import type { ExpenseRecord } from "@/lib/types";
+import { SectionHeading } from "@/components/SectionHeading";
 
-interface ExpenseBreakdownChartProps {
-  expenses: ExpenseRecord[];
+const categoryColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)", "var(--chart-6)", "var(--chart-7)"];
+interface CategoryPayload { name: string; value: number; payload: { fill?: string }; }
+
+function CategoryTooltip({ active, payload }: { active?: boolean; payload?: CategoryPayload[] }) {
+  if (!active || !payload?.length) return null;
+  return <div className="glass-popover px-4 py-3 text-xs"><p className="text-muted-foreground">{payload[0].name}</p><p className="mt-1 font-semibold tabular-nums">{formatRupiah(payload[0].value)}</p></div>;
 }
 
-const CATEGORY_COLORS = [
-  "#4f46e5", // Indigo
-  "#f97316", // Orange
-  "#10b981", // Emerald
-  "#ec4899", // Pink
-  "#8b5cf6", // Purple
-  "#06b6d4", // Cyan
-  "#f59e0b", // Amber
-];
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-function CustomTooltip({ active, payload }: any) {
-  if (!active || !payload || payload.length === 0) return null;
-  const data = payload[0];
-  return (
-    <div className="min-w-[160px] rounded-2xl border-2 border-border bg-popover/95 p-3 text-xs shadow-xl backdrop-blur-sm">
-      <div className="flex items-center gap-2 font-bold text-popover-foreground">
-        <span
-          className="h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: data.color }}
-        />
-        <span className="truncate">{data.name}</span>
-      </div>
-      <p className="mt-1.5 font-mono text-sm font-extrabold text-foreground">
-        {formatRupiah(data.value)}
-      </p>
-    </div>
-  );
-}
-
-function CustomLegend({ payload }: any) {
-  if (!payload) return null;
-  return (
-    <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs">
-      {payload.map((entry: any, index: number) => (
-        <span
-          key={`item-${index}`}
-          className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground"
-        >
-          <span
-            className="h-2 w-2 rounded-full shrink-0"
-            style={{ backgroundColor: entry.color }}
-          />
-          {entry.value}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-export function ExpenseBreakdownChart({ expenses }: ExpenseBreakdownChartProps) {
-  const totalExpense = expenses.reduce((sum, e) => sum + e.amount, 0);
-
-  const categoryMap: Record<string, number> = {};
-  for (const exp of expenses) {
-    const cat = exp.category?.trim() || "Lainnya";
-    categoryMap[cat] = (categoryMap[cat] || 0) + exp.amount;
+export function ExpenseBreakdownChart({ expenses }: { expenses: ExpenseRecord[] }) {
+  const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const categories: Record<string, number> = {};
+  for (const expense of expenses) {
+    const category = expense.category?.trim() || "Lainnya";
+    categories[category] = (categories[category] || 0) + expense.amount;
   }
-
-  const chartData = Object.entries(categoryMap)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+  const data = Object.entries(categories).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-xs">
-      {/* Header */}
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 dark:bg-orange-950/60 dark:text-orange-400">
-            <PieIcon className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-foreground">
-              Alokasi Pengeluaran
-            </h3>
-            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-              Distribusi penggunaan kas per kategori
-            </p>
-          </div>
-        </div>
-
-        {totalExpense > 0 && (
-          <span className="hidden sm:inline-flex rounded-xl border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-bold font-mono text-muted-foreground">
-            Total: {formatRupiah(totalExpense)}
-          </span>
-        )}
-      </div>
-
-      {/* Body */}
-      {chartData.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-12 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-            <ShoppingBag className="h-5 w-5" />
-          </div>
-          <p className="text-xs font-bold text-muted-foreground">
-            Belum Ada Pengeluaran
-          </p>
-          <p className="text-[10px] font-medium text-muted-foreground/70">
-            Seluruh saldo kas masih utuh semester ini
-          </p>
-        </div>
+    <section className="glass-panel glass-section flex h-full min-w-0 flex-col">
+      <SectionHeading eyebrow="Penggunaan dana" title="Alokasi pengeluaran" description="Rincian pemakaian kas semester ini." />
+      {data.length === 0 ? (
+        <div className="panel-empty flex-1"><strong>Belum ada pengeluaran.</strong><p className="mt-1 text-[11px]">Kategori akan muncul setelah transaksi dicatat.</p></div>
       ) : (
-        <div className="flex flex-1 flex-col justify-between">
-          <div className="min-h-[200px] flex-1 sm:min-h-[220px]">
-            <ResponsiveContainer width="100%" height="100%" minHeight={200}>
-              <PieChart accessibilityLayer={false}>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="value"
-                  isAnimationActive={false}
-                >
-                  {chartData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]}
-                      stroke="var(--card)"
-                      strokeWidth={2.5}
-                    />
-                  ))}
+        <>
+          <div className="relative h-56">
+            <ResponsiveContainer width="100%" height="100%" minHeight={224} initialDimension={{ width: 240, height: 224 }}>
+              <PieChart>
+                <Pie data={data} cx="50%" cy="50%" innerRadius={76} outerRadius={92} paddingAngle={4} cornerRadius={4} dataKey="value" isAnimationActive={false}>
+                  {data.map((item, index) => <Cell key={item.name} fill={categoryColors[index % categoryColors.length]} stroke="none" />)}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
-                <Legend content={<CustomLegend />} />
+                <Tooltip content={<CategoryTooltip />} />
               </PieChart>
             </ResponsiveContainer>
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-[10px] text-muted-foreground">Total keluar</span>
+              <span className="mt-2 max-w-36 break-words text-xl font-medium tracking-tight tabular-nums">{formatRupiah(totalExpense)}</span>
+            </div>
           </div>
-
-          {/* Top category breakdown list */}
-          <div className="mt-3 divide-y divide-border border-t border-border pt-3">
-            {chartData.slice(0, 3).map((item, idx) => {
-              const pct = Math.round((item.value / Math.max(1, totalExpense)) * 100);
-              return (
-                <div key={item.name} className="flex items-center justify-between py-1.5 text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span
-                      className="h-2 w-2 rounded-full shrink-0"
-                      style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }}
-                    />
-                    <span className="truncate font-semibold text-foreground">{item.name}</span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 font-mono text-[11px]">
-                    <span className="font-bold text-foreground">{formatRupiah(item.value)}</span>
-                    <span className="text-muted-foreground font-semibold">({pct}%)</span>
-                  </div>
-                </div>
-              );
+          <div className="mt-3">
+            {data.map((item, index) => {
+              const percentage = Math.round(item.value / Math.max(1, totalExpense) * 100);
+              const color = categoryColors[index % categoryColors.length];
+              return <div key={item.name} className="category-row"><div className="min-w-0"><p className="font-medium">{item.name}</p><div className="category-bar"><div className="h-full rounded-full" style={{ width: `${percentage}%`, background: color }} /></div></div><div className="text-right tabular-nums"><p className="font-medium">{formatRupiah(item.value)}</p><p className="mt-1 text-[9px] text-muted-foreground">{percentage}%</p></div></div>;
             })}
           </div>
-        </div>
+        </>
       )}
-    </div>
+    </section>
   );
 }

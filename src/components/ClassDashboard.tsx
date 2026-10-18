@@ -8,19 +8,21 @@ import {
   RefreshCw,
   AlertCircle,
   QrCode,
-  X,
-  Info,
   CalendarOff,
-  Sparkles,
   Download,
   ExternalLink,
+  ArrowUpRight,
+  Users,
+  Leaf,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { GlassDialog } from "@/components/GlassDialog";
 import { supabase } from "@/lib/supabase";
 import {
   calculateWeeksElapsed,
   getAdjustedWeekIndex,
   parseLocalDate,
+  formatRupiah,
 } from "@/lib/utils";
 import type {
   CashFlowWeek,
@@ -445,7 +447,7 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
                   <button
                     key={c.slug}
                     onClick={() => router.push(`/c/${c.slug}`)}
-                    className="flex w-full items-center justify-between rounded-2xl border-2 border-border bg-background px-3 py-2.5 text-xs font-semibold transition-all hover:border-primary/50 hover:text-primary"
+                    className="flex w-full items-center justify-between rounded-2xl border-2 border-border bg-background/40 px-3 py-2.5 text-xs font-semibold transition-all hover:border-primary/50 hover:text-primary"
                   >
                     <span>Kelas {c.name}</span>
                     <span className="font-mono text-[10px] text-muted-foreground">{c.slug}</span>
@@ -497,44 +499,51 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
 
   /* ── Dashboard ── */
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
+    <div className="flex min-h-screen flex-col text-foreground">
+      <a href="#ringkasan" className="skip-link">Langsung ke konten</a>
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 z-40 px-3 pt-3 sm:px-6 sm:pt-5 lg:px-8">
+        <div className="liquid-glass dashboard-header mx-auto flex min-h-18 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-xs">
-              <Wallet className="h-4.5 w-4.5" />
+            <div className="glass-button glass-button-primary size-11 shrink-0 rounded-2xl">
+              <Wallet className="size-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-sm font-extrabold sm:text-base">
+              <p className="truncate text-sm font-extrabold sm:text-base">
                 Saku<span className="text-primary">Kelas</span>
-                <span className="ml-2 hidden rounded-full bg-accent px-2.5 py-0.5 text-[11px] font-bold text-accent-foreground sm:inline-block">
-                  {classInfo.name}
-                </span>
-              </h1>
+              </p>
               <p className="truncate text-[10px] font-medium text-muted-foreground">
-                <span className="sm:hidden">{classInfo.name} · </span>
-                {classInfo.academicYear}
+                Uang kita. Cerita kita.
               </p>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <nav aria-label="Navigasi dashboard" className="dashboard-nav hidden items-center rounded-full lg:flex">
+            <a href="#ringkasan">Ringkasan</a>
+            <a href="#buku-kas">Buku kas</a>
+            <a href="#cek-iuran">Cek iuran <ArrowUpRight className="ml-1 inline size-3" /></a>
+          </nav>
+
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => setShowExportModal(true)}
-              className="flex h-9 items-center gap-1.5 rounded-xl border border-border bg-card px-3 text-xs font-bold text-foreground transition-all hover:bg-accent hover:border-primary/50 active:scale-95 sm:px-3.5"
+              aria-label="Ekspor laporan kas"
+              title="Ekspor laporan kas"
+              className="glass-button size-11 text-xs font-semibold text-foreground sm:w-auto sm:px-3.5"
             >
-              <Download className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
-              <span className="hidden min-[480px]:inline">Ekspor Laporan</span>
+              <Download className="size-4 text-primary" />
+              <span className="hidden sm:inline">Ekspor</span>
             </button>
 
             {classInfo.qrisUrl && (
               <button
                 onClick={() => setShowQrisModal(true)}
-                className="flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-95 sm:px-4"
+                aria-label="Bayar kas dengan QRIS"
+                title="Bayar kas dengan QRIS"
+                className="glass-button glass-button-primary size-11 text-xs font-semibold sm:w-auto sm:px-4"
               >
                 <QrCode className="h-4 w-4" />
-                <span className="hidden min-[400px]:inline">Bayar QRIS</span>
+                <span className="hidden sm:inline">Bayar QRIS</span>
               </button>
             )}
             <ThemeToggle />
@@ -543,22 +552,30 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
       </header>
 
       {/* Konten */}
-      <main className="mx-auto w-full max-w-7xl flex-1 space-y-5 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-8 lg:px-8">
+      <main id="ringkasan" className="section-anchor mx-auto w-full max-w-7xl flex-1 space-y-5 px-4 py-6 sm:space-y-6 sm:px-6 sm:py-10 lg:px-8">
         {/* Sapaan */}
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="flex flex-wrap items-center gap-x-3 gap-y-1"
+          className="flex flex-col justify-between gap-5 pb-1 sm:flex-row sm:items-end sm:pb-2"
         >
-          <h2 className="flex items-center gap-2 text-xl font-extrabold tracking-tight sm:text-2xl">
-            <span>Halo, warga kelas {classInfo.name}!</span>
-            <Sparkles className="h-5 w-5 text-indigo-500 stroke-[2.2]" />
-          </h2>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-[11px] font-bold text-muted-foreground">
-            <Calendar className="h-3 w-3 text-primary" />
-            Minggu ke-{stats.elapsedWeeks}
-          </span>
+          <div>
+            <p className="eyebrow mb-3 flex flex-wrap items-center gap-2"><span className="size-1.5 rounded-full bg-primary" />{classInfo.name}<span className="font-normal text-primary/40">/</span><span className="font-medium tracking-[.08em] text-muted-foreground">{classInfo.academicYear}</span></p>
+            <h1 className="hero-title">Kas kecil.<br className="sm:hidden" /> <em>Rencana besar.</em></h1>
+            <p className="mt-3 max-w-lg text-xs leading-relaxed text-muted-foreground sm:text-sm">Satu kelas, satu tujuan. Semua tercatat, semua bisa lihat.</p>
+          </div>
+          <div className="hidden w-fit shrink-0 items-center gap-3 pb-1 sm:flex">
+            <div className="flex pl-2" aria-hidden="true">
+              {students.slice(0, 3).map((student) => (
+                <span key={student.id} className="class-portrait">{student.name.split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("")}</span>
+              ))}
+            </div>
+            <div>
+              <p className="flex items-center gap-1.5 text-[11px] font-bold"><Users className="size-3" />{students.length} siswa, satu dompet.</p>
+              <p className="mt-1 text-[10px] text-muted-foreground">Iuran {formatRupiah(classInfo.weeklyAmount)} / minggu</p>
+            </div>
+          </div>
         </motion.div>
 
         {/* Baris 1: Saldo & metrik */}
@@ -574,6 +591,13 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
             totalDebt={stats.totalDebt}
           />
         </motion.section>
+
+        <div className="flex flex-wrap items-end justify-between gap-3 px-1 pt-4">
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Ringkasan keuangan</h2>
+          </div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/80 bg-white/30 px-3 py-2 text-[10px] font-semibold text-muted-foreground dark:border-white/20 dark:bg-white/5"><Calendar className="size-3.5 text-primary" />Minggu ke-{stats.elapsedWeeks}</span>
+        </div>
 
         {/* Baris 2: Grafik Arus Kas + Alokasi Pengeluaran */}
         <motion.section
@@ -595,7 +619,8 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.12 }}
-          className="w-full"
+          id="buku-kas"
+          className="section-anchor w-full min-w-0"
         >
           <BukuKasMatrix
             students={stats.students}
@@ -609,7 +634,8 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.15 }}
-          className="grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3"
+          id="cek-iuran"
+          className="section-anchor grid grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3"
         >
           <div className="lg:col-span-2">
             <StudentSearch
@@ -653,11 +679,11 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-border bg-card/40 py-8">
+      <footer className="mt-4 border-t border-white/50 py-7 dark:border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 sm:flex-row sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
-              <Wallet className="h-3.5 w-3.5" />
+            <div className="glass-icon flex size-8 items-center justify-center rounded-xl bg-accent text-primary">
+              <Leaf className="size-4" />
             </div>
             <span className="text-xs font-extrabold text-foreground tracking-tight">
               Saku<span className="text-primary">Kelas</span>
@@ -666,7 +692,6 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
 
           <div className="flex flex-col items-center gap-1 text-center sm:items-end sm:text-right text-xs font-medium text-muted-foreground">
             <p className="inline-flex items-center gap-1.5 font-semibold text-foreground/85">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
               SakuKelas · Portal Transparansi Kas Kelas
             </p>
             <p className="text-[11px]">
@@ -676,85 +701,18 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
         </div>
       </footer>
 
-      {/* Modal QRIS */}
-      <AnimatePresence>
-        {showQrisModal && classInfo.qrisUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm"
-            onClick={() => setShowQrisModal(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.93, y: 16 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              transition={{ duration: 0.25 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-sm sm:max-w-md rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-2xl"
-            >
-              <button
-                onClick={() => setShowQrisModal(false)}
-                aria-label="Tutup"
-                className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:text-foreground hover:bg-accent"
-              >
-                <X className="h-4 w-4" />
-              </button>
-
-              <div className="mb-4 flex items-center gap-2.5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-                  <QrCode className="h-5 w-5" />
-                </div>
-                <div>
-                  <p className="text-sm font-extrabold text-foreground">QRIS Pembayaran Kas</p>
-                  <p className="text-[10px] text-muted-foreground">
-                    Scan menggunakan E-Wallet atau Mobile Banking
-                  </p>
-                </div>
-              </div>
-
-              {/* Bingkai gambar QRIS proporsional */}
-              <div className="relative mb-4 flex aspect-square max-h-72.5 sm:max-h-80 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-border bg-white p-4 shadow-xs">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={classInfo.qrisUrl}
-                  alt="QRIS Pembayaran Kas Kelas"
-                  className="h-full w-full object-contain rounded-lg"
-                />
-              </div>
-
-              <div className="mb-4 flex items-start gap-2.5 rounded-2xl border border-primary/20 bg-accent/80 p-3 text-xs font-medium text-accent-foreground">
-                <Info className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>
-                  Setelah transfer via QRIS, kirim konfirmasi dan bukti bayar ke bendahara kelas agar segera dicatat.
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <button
-                  onClick={handleDownloadQris}
-                  disabled={isDownloadingQris}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-xs font-bold text-white shadow-xs transition-all hover:bg-indigo-700 active:scale-98 disabled:opacity-50"
-                >
-                  <Download className="h-4 w-4" />
-                  <span>{isDownloadingQris ? "Mengunduh…" : "Unduh Gambar QRIS"}</span>
-                </button>
-
-                <a
-                  href={classInfo.qrisUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background py-2 text-xs font-semibold text-muted-foreground transition-all hover:bg-accent hover:text-foreground"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  Buka Gambar Ukuran Penuh
-                </a>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <GlassDialog open={showQrisModal && !!classInfo.qrisUrl} onOpenChange={setShowQrisModal}
+        eyebrow="QRIS kelas" title="Bayar iuran" description="Scan menggunakan e-wallet atau mobile banking.">
+        {classInfo.qrisUrl && <>
+          <div className="flex aspect-square max-h-80 items-center justify-center rounded-2xl bg-white p-4">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={classInfo.qrisUrl} alt="QRIS Pembayaran Kas Kelas" className="h-full w-full rounded-lg object-contain" />
+          </div>
+          <p className="section-surface p-4 text-[11px] leading-relaxed text-muted-foreground">Setelah transfer, kirim bukti pembayaran ke bendahara agar setoranmu dicatat.</p>
+          <button type="button" onClick={handleDownloadQris} disabled={isDownloadingQris} className="glass-button glass-button-primary w-full px-4 py-2.5 text-xs font-semibold disabled:opacity-50"><Download className="size-4" />{isDownloadingQris ? "Mengunduh…" : "Unduh gambar QRIS"}</button>
+          <a href={classInfo.qrisUrl} target="_blank" rel="noreferrer" className="glass-button w-full px-4 py-2 text-[11px] font-medium"><ExternalLink className="size-3.5" />Buka gambar penuh</a>
+        </>}
+      </GlassDialog>
 
       {/* Modal Ekspor Laporan */}
       {stats && (
@@ -774,8 +732,10 @@ export function ClassDashboard({ slug }: ClassDashboardProps) {
 /* Bingkai halaman untuk status loading/error agar konsisten */
 function StatusShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
-      {children}
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 px-4 py-10 text-foreground">
+      <a href="/" className="flex items-center gap-2 text-base font-extrabold"><span className="glass-button glass-button-primary size-11"><Wallet className="size-5" /></span>Saku<span className="-ml-2 text-primary">Kelas</span></a>
+      <div className="glass-panel flex w-full max-w-lg justify-center p-7 sm:p-10">{children}</div>
+      <p className="text-[11px] text-muted-foreground">Kas kita, terbuka untuk semua.</p>
     </div>
   );
 }

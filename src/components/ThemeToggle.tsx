@@ -27,7 +27,8 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       aria-label={isDark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}
-      className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border-2 border-border bg-card text-foreground transition-all hover:border-primary/60 hover:text-primary active:scale-95"
+      title={isDark ? "Ganti ke mode terang" : "Ganti ke mode gelap"}
+      className="glass-button size-11 shrink-0 text-primary"
     >
       {/* Render ikon hanya setelah mount agar tidak mismatch dengan SSR */}
       {mounted ? (

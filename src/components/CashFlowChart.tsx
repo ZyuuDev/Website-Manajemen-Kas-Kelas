@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+import { SectionHeading } from "@/components/SectionHeading";
 import { BarChart3 } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import type { CashFlowWeek } from "@/lib/types";
@@ -36,7 +37,7 @@ function ChartTooltip({ active, payload, label }: any) {
   const netWeek = incomeVal - expenseVal;
 
   return (
-    <div className="min-w-47.5 rounded-2xl border-2 border-border bg-popover/95 p-3.5 text-xs shadow-xl backdrop-blur-sm">
+    <div className="glass-popover min-w-47.5 p-3.5 text-xs">
       <div className="mb-2.5 flex items-center justify-between border-b-2 border-border pb-2">
         <span className="font-extrabold text-popover-foreground">{label}</span>
         {netWeek !== 0 && (
@@ -74,7 +75,7 @@ function ChartTooltip({ active, payload, label }: any) {
               </span>
               <span
                 className={`font-mono font-bold ${
-                  isBalance ? "text-primary dark:text-indigo-400" : "text-popover-foreground"
+                  isBalance ? "text-primary dark:text-emerald-400" : "text-popover-foreground"
                 }`}
               >
                 {formatRupiah(entry.value ?? 0)}
@@ -103,7 +104,7 @@ function LegendContent({ payload }: any) {
         return (
           <span
             key={entry.value}
-            className="flex items-center gap-1.5 text-[11px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+            className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             <span
               className="inline-block h-2.5 w-2.5 rounded-full"
@@ -133,42 +134,16 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   const totalExpense = (data || []).reduce((sum, w) => sum + (w.expense || 0), 0);
 
   return (
-    <div className="flex h-full flex-col rounded-3xl border-2 border-border bg-card p-5 sm:p-6 shadow-xs">
-      {/* Header */}
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-2.5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
-            <BarChart3 className="h-5 w-5" />
-          </div>
-          <div>
-            <h3 className="text-sm font-extrabold text-foreground">Arus Kas Mingguan</h3>
-            <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-              Uang masuk vs keluar per minggu, plus garis saldo berjalan
-            </p>
-          </div>
-        </div>
-
-        {/* Quick summary badges */}
-        {hasData && (totalIncome > 0 || totalExpense > 0) && (
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="flex items-center gap-1.5 rounded-xl border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-bold">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
-              <span className="text-muted-foreground">Masuk:</span>
-              <span className="font-mono text-foreground">{shortRupiah(totalIncome)}</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-xl border border-border/80 bg-background/60 px-2.5 py-1 text-[11px] font-bold">
-              <span className="h-2 w-2 rounded-full bg-orange-500" />
-              <span className="text-muted-foreground">Keluar:</span>
-              <span className="font-mono text-foreground">{shortRupiah(totalExpense)}</span>
-            </div>
-          </div>
-        )}
+    <section className="glass-panel glass-section flex h-full min-w-0 flex-col">
+      <SectionHeading eyebrow="Arus kas" title="Masuk & keluar" description="Perbandingan mingguan dengan saldo berjalan." />
+      <div className="mb-6 grid grid-cols-2 gap-5">
+        <div className="chart-stat"><p>Total masuk</p><p className="text-primary">{formatRupiah(totalIncome)}</p></div>
+        <div className="chart-stat"><p>Total keluar</p><p>{formatRupiah(totalExpense)}</p></div>
       </div>
-
       {/* Chart */}
-      <div className="min-h-65 flex-1 sm:min-h-75">
+      <div className="chart-surface min-h-65 flex-1 sm:min-h-75">
         {!hasData ? (
-          <div className="flex h-full min-h-65 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border py-12 text-center">
+          <div className="flex h-full min-h-65 flex-col items-center justify-center gap-2 rounded-2xl py-12 text-center">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
               <BarChart3 className="h-5 w-5" />
             </div>
@@ -178,7 +153,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
             </p>
           </div>
         ) : (
-          <ResponsiveContainer width="100%" height="100%" minHeight={260}>
+          <ResponsiveContainer width="100%" height="100%" minHeight={260} initialDimension={{ width: 320, height: 260 }}>
             <ComposedChart
               accessibilityLayer={false}
               data={data}
@@ -236,7 +211,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
                 dataKey="income"
                 name="Masuk"
                 fill="url(#incomeBarGrad)"
-                radius={[5, 5, 0, 0]}
+                radius={[7, 7, 2, 2]}
                 maxBarSize={24}
                 isAnimationActive={false}
               />
@@ -244,7 +219,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
                 dataKey="expense"
                 name="Keluar"
                 fill="url(#expenseBarGrad)"
-                radius={[5, 5, 0, 0]}
+                radius={[7, 7, 2, 2]}
                 maxBarSize={24}
                 isAnimationActive={false}
               />
@@ -253,17 +228,17 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
                 dataKey="balance"
                 name="Saldo"
                 stroke="var(--chart-balance)"
-                strokeWidth={2.5}
+                strokeWidth={2}
                 dot={{
-                  r: 4.5,
-                  fill: "var(--card)",
+                  r: 3.5,
+                  fill: "var(--background)",
                   stroke: "var(--chart-balance)",
                   strokeWidth: 2.5,
                 }}
                 activeDot={{
                   r: 6.5,
                   fill: "var(--chart-balance)",
-                  stroke: "var(--card)",
+                  stroke: "var(--background)",
                   strokeWidth: 2.5,
                 }}
                 isAnimationActive={false}
@@ -272,6 +247,6 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
           </ResponsiveContainer>
         )}
       </div>
-    </div>
+    </section>
   );
 }

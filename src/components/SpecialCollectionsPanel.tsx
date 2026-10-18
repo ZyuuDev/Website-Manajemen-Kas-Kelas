@@ -1,133 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ClipboardList, CheckCircle2, XCircle, ChevronDown } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { formatRupiah } from "@/lib/utils";
 import type { SpecialCollectionInfo } from "@/lib/types";
+import { SectionHeading } from "@/components/SectionHeading";
 
-interface StudentEntry {
-  id: string;
-  name: string;
-  nis: string;
-}
+interface StudentEntry { id: string; name: string; nis: string; }
+interface SpecialCollectionsPanelProps { collections: SpecialCollectionInfo[]; students: StudentEntry[]; }
 
-interface SpecialCollectionsPanelProps {
-  collections: SpecialCollectionInfo[];
-  students: StudentEntry[];
-}
-
-export function SpecialCollectionsPanel({
-  collections,
-  students,
-}: SpecialCollectionsPanelProps) {
+export function SpecialCollectionsPanel({ collections, students }: SpecialCollectionsPanelProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
+  const id = useId();
   if (collections.length === 0) return null;
 
-  const toggle = (id: string) =>
-    setExpandedId((prev) => (prev === id ? null : id));
-
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs">
-      {/* Header */}
-      <div className="mb-4 flex items-start gap-2.5">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-950/60 dark:text-indigo-400">
-          <ClipboardList className="h-4.5 w-4.5" />
-        </div>
-        <div>
-          <h3 className="text-sm font-extrabold">Iuran Khusus</h3>
-          <p className="mt-0.5 text-[11px] font-medium text-muted-foreground">
-            Iuran non-rutin semester ini — klik untuk lihat siapa yang sudah bayar
-          </p>
-        </div>
-      </div>
-
-      {/* Daftar iuran */}
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        {collections.map((col) => {
-          const paidCount = col.paidIds.length;
-          const pct = students.length > 0 ? (paidCount / students.length) * 100 : 0;
-          const isOpen = expandedId === col.id;
-
+    <section className="glass-panel glass-section h-full min-w-0">
+      <SectionHeading eyebrow="Keperluan bersama" title="Iuran khusus" description="Pengumpulan dana di luar kas mingguan." />
+      <div className="space-y-3">
+        {collections.map((collection) => {
+          const paidCount = collection.paidIds.length;
+          const percentage = students.length > 0 ? Math.min(100, (paidCount / students.length) * 100) : 0;
+          const isOpen = expandedId === collection.id;
           return (
-            <div
-              key={col.id}
-              className={`rounded-xl border bg-background transition-colors ${
-                isOpen ? "border-indigo-500/50 md:col-span-2" : "border-border"
-              }`}
-            >
-              <button
-                onClick={() => toggle(col.id)}
-                className="flex w-full items-center gap-3 p-4 text-left"
-              >
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <p className="text-sm font-extrabold">{col.name}</p>
-                    <span className="rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-extrabold text-accent-foreground">
-                      {formatRupiah(col.amount)}/siswa
-                    </span>
-                  </div>
-                  {col.description && (
-                    <p className="mt-0.5 truncate text-[11px] font-medium text-muted-foreground">
-                      {col.description}
-                    </p>
-                  )}
-                  {/* Progress */}
-                  <div className="mt-2.5 flex items-center gap-2">
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className="h-full rounded-full bg-emerald-500 transition-all"
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <span className="shrink-0 text-[10px] font-extrabold text-muted-foreground">
-                      {paidCount}/{students.length}
-                    </span>
-                  </div>
+            <div key={collection.id} className="collection-card" data-open={isOpen}>
+              <button type="button" onClick={() => setExpandedId(isOpen ? null : collection.id)}
+                aria-expanded={isOpen} aria-controls={`${id}-${collection.id}`} className="w-full p-5 text-left">
+                <p className="text-[13px] font-semibold leading-relaxed">{collection.name}</p>
+                <p className="mt-2 text-xl font-medium tracking-tight tabular-nums">{formatRupiah(collection.amount)}<span className="ml-1 text-[10px] font-normal tracking-normal text-muted-foreground">/ siswa</span></p>
+                {collection.description && <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{collection.description}</p>}
+                <div className="mt-5 h-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary/70" style={{ width: `${percentage}%` }} /></div>
+                <div className="mt-3 flex items-center justify-between gap-3 text-[10px] text-muted-foreground">
+                  <span>{paidCount} dari {students.length} siswa membayar</span>
+                  <span className="inline-flex items-center gap-1 font-medium text-primary">Rincian<ChevronDown className={`size-3 transition-transform ${isOpen ? "rotate-180" : ""}`} /></span>
                 </div>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
-                    isOpen ? "rotate-180" : ""
-                  }`}
-                />
               </button>
-
-              {/* Detail siswa */}
-              <AnimatePresence>
+              <AnimatePresence initial={false}>
                 {isOpen && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 gap-1.5 border-t border-border p-4 sm:grid-cols-2 lg:grid-cols-3">
-                      {students.map((std) => {
-                        const hasPaid = col.paidIds.includes(std.id);
-                        return (
-                          <div
-                            key={std.id}
-                            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
-                          >
-                            {hasPaid ? (
-                              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
-                            ) : (
-                              <XCircle className="h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
-                            )}
-                            <span className="min-w-0 flex-1 truncate text-xs font-semibold">
-                              {std.name}
-                            </span>
-                            <span
-                              className={`shrink-0 text-[10px] font-extrabold ${
-                                hasPaid ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                              }`}
-                            >
-                              {hasPaid ? "Sudah" : "Belum"}
-                            </span>
-                          </div>
-                        );
+                  <motion.div id={`${id}-${collection.id}`} initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <div className="max-h-72 overflow-y-auto border-t border-border px-5 py-2">
+                      {students.map((student) => {
+                        const paid = collection.paidIds.includes(student.id);
+                        return <div key={student.id} className="collection-student"><span className="min-w-0 leading-relaxed">{student.name}</span><span className={`inline-flex shrink-0 items-center gap-1 text-[10px] ${paid ? "text-[var(--tone-paid)]" : "text-muted-foreground"}`}>{paid && <Check className="size-3" />}{paid ? "Sudah" : "Belum"}</span></div>;
                       })}
                     </div>
                   </motion.div>
@@ -137,6 +52,6 @@ export function SpecialCollectionsPanel({
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }
